@@ -21,6 +21,7 @@ scale = Vector2(0.34, 0.34)
 shape = SubResource("CircleShape2D_body")
 
 [node name="Value" type="Label" parent="."]
+layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5

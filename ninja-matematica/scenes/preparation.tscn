@@ -1,0 +1,364 @@
+[gd_scene format=3 uid="uid://b4v04clr2q6pb"]
+
+[ext_resource type="Texture2D" uid="uid://f4v8rw7btydy" path="res://assets/dojo_wood.png" id="1_bg"]
+[ext_resource type="Script" uid="uid://bb35kp1p13xqa" path="res://scripts/preparation.gd" id="2_script"]
+
+[sub_resource type="SystemFont" id="SystemFont_portuguese"]
+font_names = PackedStringArray("Arial")
+subpixel_positioning = 0
+
+[sub_resource type="Theme" id="Theme_portuguese"]
+default_font = SubResource("SystemFont_portuguese")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+content_margin_left = 26.0
+content_margin_top = 20.0
+content_margin_right = 26.0
+content_margin_bottom = 20.0
+bg_color = Color(0.13, 0.062, 0.028, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.86, 0.49, 0.14, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_help"]
+bg_color = Color(0.96, 0.42, 0.08, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.82, 0.3, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[node name="Preparation" type="Node2D" unique_id=1875142290]
+script = ExtResource("2_script")
+
+[node name="Background" type="Sprite2D" parent="." unique_id=1055777583]
+position = Vector2(640, 360)
+scale = Vector2(0.76555, 0.76555)
+texture = ExtResource("1_bg")
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=504574192]
+
+[node name="Root" type="Control" parent="HUD" unique_id=870625775]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_portuguese")
+
+[node name="Center" type="Control" parent="HUD/Root" unique_id=1830935252]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Card" type="Panel" parent="HUD/Root/Center" unique_id=461004906]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -455.0
+offset_top = -270.0
+offset_right = 455.0
+offset_bottom = 270.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="Content" type="Control" parent="HUD/Root/Center/Card" unique_id=1055980566]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 26.0
+offset_top = 20.0
+offset_right = 884.0
+offset_bottom = 520.0
+
+[node name="Title" type="Label" parent="HUD/Root/Center/Card/Content" unique_id=1465051516]
+layout_mode = 1
+offset_right = 858.0
+offset_bottom = 60.0
+theme_override_colors/font_color = Color(1, 0.8, 0.3, 1)
+theme_override_font_sizes/font_size = 38
+text = "PREPARAR PARTIDA"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DifficultyTitle" type="Label" parent="HUD/Root/Center/Card/Content" unique_id=2078927669]
+layout_mode = 1
+offset_top = 72.0
+offset_right = 858.0
+offset_bottom = 106.0
+theme_override_colors/font_color = Color(1, 0.94, 0.79, 1)
+theme_override_font_sizes/font_size = 22
+text = "ESCOLHA A DIFICULDADE"
+horizontal_alignment = 1
+
+[node name="DifficultyHelpButton" type="Button" parent="HUD/Root/Center/Card/Content" unique_id=1067469260]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = 150.0
+offset_top = 73.0
+offset_right = 178.0
+offset_bottom = 101.0
+grow_horizontal = 2
+tooltip_text = "Veja como é cada nível"
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("StyleBoxFlat_help")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_help")
+theme_override_styles/hover = SubResource("StyleBoxFlat_help")
+text = "?"
+
+[node name="DifficultyButtons" type="Control" parent="HUD/Root/Center/Card/Content" unique_id=1485493851]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 2.0
+offset_top = 116.0
+offset_right = 856.0
+offset_bottom = 172.0
+
+[node name="EasyButton" type="Button" parent="HUD/Root/Center/Card/Content/DifficultyButtons" unique_id=870877799]
+layout_mode = 1
+offset_right = 274.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 20
+toggle_mode = true
+text = "FÁCIL"
+
+[node name="NormalButton" type="Button" parent="HUD/Root/Center/Card/Content/DifficultyButtons" unique_id=1536484806]
+layout_mode = 1
+offset_left = 290.0
+offset_right = 564.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 20
+toggle_mode = true
+text = "NORMAL"
+
+[node name="HardButton" type="Button" parent="HUD/Root/Center/Card/Content/DifficultyButtons" unique_id=319173273]
+layout_mode = 1
+offset_left = 580.0
+offset_right = 854.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 20
+toggle_mode = true
+text = "DIFÍCIL"
+
+[node name="OperationTitle" type="Label" parent="HUD/Root/Center/Card/Content" unique_id=63949376]
+layout_mode = 1
+offset_top = 194.0
+offset_right = 858.0
+offset_bottom = 230.0
+theme_override_colors/font_color = Color(1, 0.94, 0.79, 1)
+theme_override_font_sizes/font_size = 22
+text = "ESCOLHA UMA OU MAIS OPERAÇÕES"
+horizontal_alignment = 1
+
+[node name="OperationButtons" type="Control" parent="HUD/Root/Center/Card/Content" unique_id=2058960985]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 3.0
+offset_top = 242.0
+offset_right = 855.0
+offset_bottom = 298.0
+
+[node name="AdditionCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content/OperationButtons" unique_id=1240360744]
+layout_mode = 1
+offset_right = 204.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 16
+text = "ADIÇÃO"
+
+[node name="SubtractionCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content/OperationButtons" unique_id=1293615778]
+layout_mode = 1
+offset_left = 216.0
+offset_right = 420.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 16
+text = "SUBTRAÇÃO"
+
+[node name="MultiplicationCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content/OperationButtons" unique_id=1636950293]
+layout_mode = 1
+offset_left = 432.0
+offset_right = 636.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 16
+text = "MULTIPLICAÇÃO"
+
+[node name="DivisionCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content/OperationButtons" unique_id=1351561909]
+layout_mode = 1
+offset_left = 648.0
+offset_right = 852.0
+offset_bottom = 56.0
+theme_override_font_sizes/font_size = 16
+text = "DIVISÃO"
+
+[node name="Status" type="Label" parent="HUD/Root/Center/Card/Content" unique_id=246627391]
+layout_mode = 1
+offset_top = 314.0
+offset_right = 858.0
+offset_bottom = 370.0
+theme_override_colors/font_color = Color(1, 0.87, 0.62, 1)
+theme_override_font_sizes/font_size = 17
+text = "Escolha uma dificuldade e pelo menos uma operação."
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Actions" type="Control" parent="HUD/Root/Center/Card/Content" unique_id=373111506]
+layout_mode = 1
+anchors_preset = 0
+offset_top = 394.0
+offset_right = 858.0
+offset_bottom = 456.0
+
+[node name="BackButton" type="Button" parent="HUD/Root/Center/Card/Content/Actions" unique_id=772335853]
+layout_mode = 1
+offset_left = 97.0
+offset_right = 417.0
+offset_bottom = 62.0
+theme_override_font_sizes/font_size = 21
+text = "VOLTAR"
+
+[node name="StartButton" type="Button" parent="HUD/Root/Center/Card/Content/Actions" unique_id=68153352]
+layout_mode = 1
+offset_left = 441.0
+offset_right = 761.0
+offset_bottom = 62.0
+theme_override_font_sizes/font_size = 23
+disabled = true
+text = "COMEÇAR"
+
+[node name="DifficultyHelp" type="Control" parent="HUD/Root" unique_id=801904664]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="Dim" type="ColorRect" parent="HUD/Root/DifficultyHelp" unique_id=256956520]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+color = Color(0, 0, 0, 0.72)
+
+[node name="HelpCard" type="Panel" parent="HUD/Root/DifficultyHelp" unique_id=181203003]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -370.0
+offset_top = -270.0
+offset_right = 370.0
+offset_bottom = 270.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+
+[node name="HelpContent" type="Control" parent="HUD/Root/DifficultyHelp/HelpCard" unique_id=1834919018]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 32.0
+offset_top = 24.0
+offset_right = 708.0
+offset_bottom = 516.0
+
+[node name="HelpTitle" type="Label" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1748571226]
+layout_mode = 1
+offset_right = 676.0
+offset_bottom = 52.0
+theme_override_colors/font_color = Color(1, 0.8, 0.3, 1)
+theme_override_font_sizes/font_size = 32
+text = "O que muda em cada nível?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EasyHeading" type="Label" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1165844347]
+layout_mode = 1
+offset_top = 72.0
+offset_right = 676.0
+offset_bottom = 102.0
+theme_override_colors/font_color = Color(1, 0.87, 0.42, 1)
+theme_override_font_sizes/font_size = 22
+text = "FÁCIL"
+
+[node name="EasyDetails" type="Label" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1882126256]
+layout_mode = 1
+offset_top = 104.0
+offset_right = 676.0
+offset_bottom = 170.0
+theme_override_colors/font_color = Color(1, 0.94, 0.81, 1)
+theme_override_font_sizes/font_size = 18
+text = "As contas são mais tranquilas. As frutas vêm devagar e você tem mais tempo. Errar tira pouquinho tempo."
+autowrap_mode = 2
+
+[node name="NormalHeading" type="Label" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1785829697]
+layout_mode = 1
+offset_top = 188.0
+offset_right = 676.0
+offset_bottom = 218.0
+theme_override_colors/font_color = Color(1, 0.87, 0.42, 1)
+theme_override_font_sizes/font_size = 22
+text = "NORMAL"
+
+[node name="NormalDetails" type="Label" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=686074863]
+layout_mode = 1
+offset_top = 220.0
+offset_right = 676.0
+offset_bottom = 286.0
+theme_override_colors/font_color = Color(1, 0.94, 0.81, 1)
+theme_override_font_sizes/font_size = 18
+text = "Um desafio na medida! As contas e a velocidade ficam no meio-termo. Errar tira um pouco de tempo."
+autowrap_mode = 2
+
+[node name="HardHeading" type="Label" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1625162906]
+layout_mode = 1
+offset_top = 304.0
+offset_right = 676.0
+offset_bottom = 334.0
+theme_override_colors/font_color = Color(1, 0.87, 0.42, 1)
+theme_override_font_sizes/font_size = 22
+text = "DIFÍCIL"
+
+[node name="HardDetails" type="Label" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1925096758]
+layout_mode = 1
+offset_top = 336.0
+offset_right = 676.0
+offset_bottom = 402.0
+theme_override_colors/font_color = Color(1, 0.94, 0.81, 1)
+theme_override_font_sizes/font_size = 18
+text = "Pra quem quer mais desafio! As contas ficam difíceis, as frutas voam mais rápido e sobra menos tempo. Errar tira mais tempo."
+autowrap_mode = 2
+
+[node name="HelpCloseButton" type="Button" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1179290758]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -160.0
+offset_top = 438.0
+offset_right = 160.0
+offset_bottom = 492.0
+theme_override_font_sizes/font_size = 21
+text = "FECHAR"

@@ -11,9 +11,14 @@ config_version=5
 [application]
 
 config/name="NinjaMatematica"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+AudioManager="*res://scripts/audio_manager.gd"
+SceneFlow="*res://scripts/scene_flow.gd"
 
 [display]
 
@@ -22,7 +27,6 @@ window/size/viewport_height=720
 window/size/window_width_override=1280
 window/size/window_height_override=720
 window/stretch/mode="canvas_items"
-window/stretch/aspect="expand"
 
 [physics]
 

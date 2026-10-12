@@ -1,24 +1,43 @@
 extends Node2D
 
 @export var fruit_scene: PackedScene
-@export_range(5.0, 120.0, 1.0) var round_seconds := 40.0
-@export_range(0.5, 5.0, 0.1) var spawn_interval := 1.7
+@export_range(5.0, 120.0, 1.0) var round_seconds := 60.0
+@export_range(0.5, 5.0, 0.1) var spawn_interval := 1.9
 @export_range(0.2, 2.0, 0.05) var swipe_width := 50.0
 @export_range(0.0, 120.0, 5.0) var spawn_point_jitter := 35.0
-@export_range(300.0, 1200.0, 25.0) var fruit_launch_speed_min := 670.0
-@export_range(300.0, 1400.0, 25.0) var fruit_launch_speed_max := 790.0
+@export_range(300.0, 1200.0, 25.0) var fruit_launch_speed_min := 610.0
+@export_range(300.0, 1400.0, 25.0) var fruit_launch_speed_max := 710.0
 @export_range(0.0, 250.0, 10.0) var fruit_horizontal_spread := 90.0
 @export var game_id := "ninja-matematica"
 @export var api_base_url := "http://127.0.0.1:3001"
 
 const PRACTICE_TIERS := {
-	"addition": ["add_missing", "add_2_digits", "add_over_1000"],
-	"subtraction": ["sub_missing", "sub_0_100", "sub_hard"],
-	"multiplication": ["mul_missing_0_10", "mul_13_15", "mul_hard"],
-	"division": ["div_missing_1_10", "div_13_15", "div_hard"],
+	"easy": {
+		"addition": ["add_1_3", "add_1_5", "add_over_10"],
+		"subtraction": ["sub_0_5", "sub_0_10", "sub_0_20_easy"],
+		"multiplication": ["mul_missing_2_3", "mul_missing_4_5", "mul_0_10"],
+		"division": ["div_missing_1_10", "div_1_5", "div_1_10"],
+	},
+	"normal": {
+		"addition": ["add_2_digits", "add_over_1000", "add_over_1000"],
+		"subtraction": ["sub_0_100", "sub_0_1000", "sub_hard"],
+		"multiplication": ["mul_13_15", "mul_hard", "mul_hard"],
+		"division": ["div_13_15", "div_hard", "div_hard"],
+	},
+	"hard": {
+		"addition": ["add_2_digits", "add_over_1000", "add_over_1000"],
+		"subtraction": ["sub_0_100", "sub_0_1000", "sub_hard"],
+		"multiplication": ["mul_13_15", "mul_hard", "mul_hard"],
+		"division": ["div_13_15", "div_hard", "div_hard"],
+	},
 }
 const OP_SYMBOLS := {"addition": "+", "subtraction": "−", "multiplication": "×", "division": "÷"}
-const ROUND_TIME := 40.0
+const ROUND_TIME := 60.0
+const DIFFICULTIES := {
+	"easy": {"title": "FÁCIL", "seconds": 75.0, "penalty": 1.0, "spawn": 2.4, "speed_min": 500.0, "speed_max": 590.0, "number_min": 1, "number_max": 10, "tier": 0},
+	"normal": {"title": "NORMAL", "seconds": 60.0, "penalty": 3.0, "spawn": 1.9, "speed_min": 610.0, "speed_max": 710.0, "number_min": 2, "number_max": 25, "tier": 1},
+	"hard": {"title": "DIFÍCIL", "seconds": 45.0, "penalty": 5.0, "spawn": 1.45, "speed_min": 740.0, "speed_max": 860.0, "number_min": 10, "number_max": 99, "tier": 2},
+}
 
 @onready var fruit_layer: Node2D = $FruitLayer
 @onready var fruit_spawn_points: Node2D = $FruitSpawnPoints
@@ -28,12 +47,30 @@ const ROUND_TIME := 40.0
 @onready var timer_label: Label = $HUD/Root/TopBar/TimerCard/Timer
 @onready var equation_label: Label = $HUD/Root/EquationCard/Equation
 @onready var hint_label: Label = $HUD/Root/Hint
-@onready var status_label: Label = $HUD/Root/BottomBar/Status
-@onready var record_label: Label = $HUD/Root/BottomBar/Record
-@onready var mode_buttons: HBoxContainer = $HUD/Root/TopBar/ModeButtons
-@onready var restart_button: Button = $HUD/Root/BottomBar/RestartButton
+@onready var record_label: Label = $HUD/Root/TopBar/RecordCard/Record
+@onready var feedback_flash: ColorRect = $HUD/Root/FeedbackFlash
+@onready var pause_button: Button = $HUD/Root/TopBar/PauseButton
+@onready var pause_overlay: Control = $HUD/Root/PauseOverlay
+@onready var pause_menu: Control = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu
+@onready var pause_options: Control = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions
+@onready var resume_button: Button = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu/ResumeButton
+@onready var pause_options_button: Button = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu/OptionsButton
+@onready var pause_exit_button: Button = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu/ExitButton
+@onready var pause_options_back_button: Button = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/BackButton
+@onready var music_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/MusicCheck
+@onready var sfx_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/SfxCheck
+@onready var hints_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/HintsCheck
+@onready var fullscreen_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenCheck
+@onready var game_over_overlay: Control = $HUD/Root/GameOverOverlay
+@onready var game_over_details: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/Details
+@onready var retry_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/RetryButton
+@onready var game_over_exit_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/ExitButton
 
 var selected_operation := "multiplication"
+var selected_operations: Array[String] = []
+var selected_difficulty := "normal"
+var difficulty: Dictionary = DIFFICULTIES["normal"]
+var settings := {"show_hints": true, "fullscreen": false, "music": true, "sfx": true}
 var score := 0
 var record := 0
 var remaining_time := ROUND_TIME
@@ -52,63 +89,77 @@ var attempts := 0
 var correct_attempts := 0
 var pending_attempt: Dictionary = {}
 var retry_clock := 0.0
+var feedback_tween: Tween
 
 
 func _ready() -> void:
+	if not SceneFlow.enter_scene_from_menu():
+		return
 	api.request_completed.connect(_on_api_request_completed)
-	restart_button.pressed.connect(start_round)
+	pause_button.pressed.connect(_open_pause)
+	resume_button.pressed.connect(_resume_game)
+	pause_options_button.pressed.connect(_show_pause_options)
+	pause_exit_button.pressed.connect(_exit_to_menu)
+	pause_options_back_button.pressed.connect(_show_pause_menu)
+	retry_button.pressed.connect(_retry_round)
+	game_over_exit_button.pressed.connect(_exit_to_menu)
 	api_token = OS.get_environment("GAUSS_API_TOKEN").strip_edges()
 	var configured_url := OS.get_environment("GAUSS_API_URL").strip_edges()
 	if not configured_url.is_empty():
 		api_base_url = configured_url.trim_suffix("/")
-	for child in mode_buttons.get_children():
-		var button := child as Button
-		if button:
-			button.pressed.connect(_select_operation.bind(_operation_id_for_button(button.name)))
-	var saved_record := ConfigFile.new()
-	if saved_record.load("user://ninja_matematica.cfg") == OK:
-		record = int(saved_record.get_value("game", "record", 0))
+	var config := ConfigFile.new()
+	if config.load("user://ninja_matematica.cfg") == OK:
+		record = int(config.get_value("game", "record", 0))
+		settings["show_hints"] = bool(config.get_value("options", "hints", true))
+		settings["fullscreen"] = bool(config.get_value("options", "fullscreen", false))
+		settings["music"] = bool(config.get_value("options", "music", true))
+		settings["sfx"] = bool(config.get_value("options", "sfx", true))
+		var difficulty_id := str(config.get_value("session", "difficulty", "normal"))
+		if DIFFICULTIES.has(difficulty_id):
+			selected_difficulty = difficulty_id
+			difficulty = DIFFICULTIES[difficulty_id]
+		var saved_operations: Variant = config.get_value("session", "operations", PackedStringArray(["multiplication"]))
+		for operation in saved_operations:
+			if PRACTICE_TIERS[selected_difficulty].has(str(operation)):
+				selected_operations.append(str(operation))
+		if not selected_operations.is_empty():
+			selected_operation = selected_operations.pick_random()
+	if selected_operations.is_empty():
+		selected_operations = ["multiplication"]
+		selected_operation = "multiplication"
+	if settings["fullscreen"]:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
+	music_check.button_pressed = bool(settings.music)
+	sfx_check.button_pressed = bool(settings.sfx)
+	hints_check.button_pressed = bool(settings.show_hints)
+	fullscreen_check.button_pressed = bool(settings.fullscreen)
+	music_check.toggled.connect(_pause_option_toggled.bind("music"))
+	sfx_check.toggled.connect(_pause_option_toggled.bind("sfx"))
+	hints_check.toggled.connect(_pause_option_toggled.bind("hints"))
+	fullscreen_check.toggled.connect(_pause_option_toggled.bind("fullscreen"))
+	pause_overlay.visible = false
+	game_over_overlay.visible = false
+	round_seconds = float(difficulty.seconds)
+	spawn_interval = float(difficulty.spawn)
+	fruit_launch_speed_min = float(difficulty.speed_min)
+	fruit_launch_speed_max = float(difficulty.speed_max)
+	hint_label.visible = bool(settings.show_hints)
 	_update_score()
 	_update_record()
-	if api_token.is_empty():
-		status_label.text = "Modo local · defina GAUSS_API_TOKEN para registrar na API"
-	else:
+	if not api_token.is_empty():
 		local_mode = false
-		status_label.text = "Conectando ao Project Gauss…"
 	start_round()
-
-
-func _select_operation(operation_id: String) -> void:
-	selected_operation = operation_id
-	_refresh_mode_styles()
-	start_round()
-
-
-func _refresh_mode_styles() -> void:
-	for child in mode_buttons.get_children():
-		var button := child as Button
-		if not button:
-			continue
-		var selected := button.text == _operation_title(selected_operation)
-		button.modulate = Color(1.0, 0.83, 0.47) if selected else Color(1.0, 1.0, 1.0, 0.82)
-
-
-func _operation_id_for_button(button_name: String) -> String:
-	match button_name:
-		"AdditionButton": return "addition"
-		"SubtractionButton": return "subtraction"
-		"MultiplicationButton": return "multiplication"
-		"DivisionButton": return "division"
-	return "multiplication"
-
 
 func start_round() -> void:
 	if not pending_attempt.is_empty():
-		status_label.text = "Aguarde a confirmação da tentativa pela API antes de reiniciar."
 		return
 	if request_pending:
 		api.cancel_request()
 		request_pending = false
+	get_tree().paused = false
+	pause_overlay.visible = false
+	game_over_overlay.visible = false
+	pause_button.visible = true
 	for fruit in fruit_layer.get_children():
 		fruit.queue_free()
 	score = 0
@@ -122,7 +173,6 @@ func start_round() -> void:
 	request_pending = false
 	_update_score()
 	_update_timer()
-	_refresh_mode_styles()
 	_request_next_question()
 
 
@@ -135,8 +185,7 @@ func _process(delta: float) -> void:
 			_spawn_wave()
 			var speed_factor := 1.0 + (float(score) / 100.0) * 0.06
 			spawn_clock = maxf(0.52, spawn_interval / speed_factor)
-		if int(remaining_time) != int(remaining_time + delta):
-			_update_timer()
+		_update_timer()
 		if remaining_time <= 0.0:
 			_end_round()
 	_update_trail(delta)
@@ -167,11 +216,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		_handle_swipe(event.position)
 
 
-func _handle_swipe(position: Vector2) -> void:
+func _handle_swipe(pointer_position: Vector2) -> void:
 	if not game_running or request_pending:
-		previous_pointer = position
+		previous_pointer = pointer_position
 		return
-	trail_points.append(position)
+	trail_points.append(pointer_position)
 	if trail_points.size() > 10:
 		trail_points.pop_front()
 	slash_trail.clear_points()
@@ -179,10 +228,11 @@ func _handle_swipe(position: Vector2) -> void:
 		slash_trail.add_point(point)
 	for node in fruit_layer.get_children():
 		var fruit := node as GaussFruit
-		if fruit and not fruit.is_sliced and _distance_to_segment(fruit.global_position, previous_pointer, position) <= minf(swipe_width, fruit.slash_radius()):
+		if fruit and not fruit.is_sliced and _distance_to_segment(fruit.global_position, previous_pointer, pointer_position) <= minf(swipe_width, fruit.slash_radius()):
 			fruit.slice()
+			AudioManager.play_slice()
 			break
-	previous_pointer = position
+	previous_pointer = pointer_position
 
 
 func _distance_to_segment(point: Vector2, start: Vector2, finish: Vector2) -> float:
@@ -231,25 +281,27 @@ func _make_choices(answer: int) -> Array[int]:
 
 func _request_next_question() -> void:
 	active_question.clear()
+	if not selected_operations.is_empty():
+		selected_operation = selected_operations.pick_random()
 	if local_mode:
 		active_question = _build_local_question()
 		_equation_for(active_question)
 		return
 	request_pending = true
-	var tier_index := mini(int(score / 120), 2)
-	var practice_set: String = PRACTICE_TIERS[selected_operation][tier_index]
+	var tier_index := mini(floori(float(score) / 240.0), 2)
+	var practice_set: String = PRACTICE_TIERS[selected_difficulty][selected_operation][tier_index]
 	var query := "gameId=%s&operation=%s&practiceMode=free_practice&practiceSet=%s" % [game_id.uri_encode(), selected_operation, practice_set]
 	var headers := ["Authorization: Bearer %s" % api_token, "Accept: application/json"]
 	var error := api.request("%s/learning/games/next-question?%s" % [api_base_url, query], headers, HTTPClient.METHOD_GET)
 	if error != OK:
 		request_pending = false
-		status_label.text = "Falha ao conectar à API (código %d). Confira URL e sessão." % error
 
 
 func _build_local_question() -> Dictionary:
-	var tier_index := mini(int(score / 120), 2)
-	var low: int = [2, 10, 100][tier_index]
-	var high: int = [12, 99, 999][tier_index]
+	var low := int(difficulty.get("number_min", 2))
+	var high := int(difficulty.get("number_max", 25))
+	if score >= 240 and selected_difficulty != "easy":
+		high = mini(high + floori(float(score) / 240.0) * 10, 999)
 	var a := randi_range(low, high)
 	var b := randi_range(low, high)
 	var symbol: String = OP_SYMBOLS[selected_operation]
@@ -275,7 +327,7 @@ func _build_local_question() -> Dictionary:
 			"addition": operation["result"] = a + b
 			"subtraction": operation["result"] = a - b
 			"multiplication": operation["result"] = a * b
-			"division": operation["result"] = int(a / b)
+			"division": operation["result"] = floori(float(a) / float(b))
 	return {"answer": answer, "operation": operation}
 
 
@@ -318,7 +370,7 @@ func _question_target(question: Dictionary) -> int:
 		"addition": return int(operands[0]) + int(operands[1])
 		"subtraction": return int(operands[0]) - int(operands[1])
 		"multiplication": return int(operands[0]) * int(operands[1])
-		"division": return int(int(operands[0]) / int(operands[1]))
+		"division": return floori(float(operands[0]) / float(operands[1]))
 	return 0
 
 
@@ -357,7 +409,6 @@ func _send_pending_attempt() -> void:
 	if error != OK:
 		request_pending = false
 		retry_clock = 2.5
-		status_label.text = "Sem resposta da API · tentando reenviar a mesma tentativa…"
 
 
 func _event_id() -> String:
@@ -367,67 +418,144 @@ func _event_id() -> String:
 
 func _on_api_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	request_pending = false
-	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+	var parsed: Variant = JSON.parse_string(_decode_response_body(body))
 	if result != HTTPRequest.RESULT_SUCCESS or response_code >= 500 or response_code == 0:
 		if not pending_attempt.is_empty():
 			retry_clock = 2.5
-			status_label.text = "Sem conexão · tentando reenviar a mesma tentativa…"
 			return
 	if response_code < 200 or response_code >= 300:
-		var message := "API retornou HTTP %d" % response_code
-		if parsed is Dictionary:
-			var api_message: Variant = parsed.get("message", message)
-			message = ", ".join(api_message) if api_message is Array else str(api_message)
-		status_label.text = "%s · confira a sessão e tente novamente" % message
 		if not pending_attempt.is_empty():
 			pending_attempt.clear()
 			game_running = false
 		return
 	if not parsed is Dictionary:
-		status_label.text = "A API respondeu em um formato inesperado."
 		return
 	if parsed.has("correct"):
 		pending_attempt.clear()
 		_resolve_attempt(bool(parsed.correct), int(parsed.get("pointsDelta", 0)), true)
 	else:
 		active_question = parsed
+		var operation: Dictionary = active_question.get("operation", {})
+		selected_operation = str(operation.get("kind", selected_operation))
 		_equation_for(active_question)
 		request_pending = false
-		status_label.text = "Partida conectada ao Project Gauss · %s" % _operation_title(selected_operation)
 
 
-func _resolve_attempt(is_correct: bool, _answer_value: int, from_api := false) -> void:
+func _decode_response_body(body: PackedByteArray) -> String:
+	if _is_valid_utf8(body):
+		return body.get_string_from_utf8()
+	var decoded := PackedStringArray()
+	for byte in body:
+		decoded.append(String.chr(_windows_1252_codepoint(byte)))
+	return "".join(decoded)
+
+
+func _is_valid_utf8(bytes: PackedByteArray) -> bool:
+	var index := 0
+	while index < bytes.size():
+		var first := int(bytes[index])
+		if first <= 0x7f:
+			index += 1
+			continue
+		var continuation_count := 0
+		if first >= 0xc2 and first <= 0xdf:
+			continuation_count = 1
+		elif first >= 0xe0 and first <= 0xef:
+			continuation_count = 2
+		elif first >= 0xf0 and first <= 0xf4:
+			continuation_count = 3
+		else:
+			return false
+		if index + continuation_count >= bytes.size():
+			return false
+		for continuation_offset in range(1, continuation_count + 1):
+			var continuation := int(bytes[index + continuation_offset])
+			if continuation < 0x80 or continuation > 0xbf:
+				return false
+		var second := int(bytes[index + 1])
+		if first == 0xe0 and second < 0xa0:
+			return false
+		if first == 0xed and second > 0x9f:
+			return false
+		if first == 0xf0 and second < 0x90:
+			return false
+		if first == 0xf4 and second > 0x8f:
+			return false
+		index += continuation_count + 1
+	return true
+
+
+func _windows_1252_codepoint(byte: int) -> int:
+	if byte < 0x80 or byte >= 0xa0:
+		return byte
+	var windows_1252_controls := [
+		0x20ac, 0x0081, 0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021,
+		0x02c6, 0x2030, 0x0160, 0x2039, 0x0152, 0x008d, 0x017d, 0x008f,
+		0x0090, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014,
+		0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, 0x009d, 0x017e, 0x0178,
+	]
+	return windows_1252_controls[byte - 0x80]
+
+
+func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) -> void:
 	request_pending = false
 	if is_correct:
+		_flash_feedback(Color(0.12, 1.0, 0.24, 1.0))
 		combo += 1
 		correct_attempts += 1
 		score += 10 + mini(combo, 10) * 2
-		if from_api:
-			status_label.text = "Correto! A API registrou sua tentativa. Sequência: %d" % combo
-		else:
-			status_label.text = "Muito bem! Sequência de %d" % combo
 		hint_label.text = "ACERTO! Próxima conta chegando…"
 	else:
+		_flash_feedback(Color(1.0, 0.12, 0.1, 1.0))
 		combo = 0
-		remaining_time = maxf(0.0, remaining_time - 3.0)
+		AudioManager.play_mistake()
+		var penalty := float(difficulty.get("penalty", 3.0))
+		remaining_time = maxf(0.0, remaining_time - penalty)
 		hint_label.text = "Essa fruta não completa a conta. Tente a próxima!"
-		status_label.text = "-3 segundos · use a conta para encontrar a fruta"
 	_update_score()
 	_update_timer()
 	if game_running:
 		_request_next_question()
 
 
+func _flash_feedback(flash_color: Color) -> void:
+	var material := feedback_flash.material as ShaderMaterial
+	if material == null:
+		return
+	if feedback_tween != null and feedback_tween.is_running():
+		feedback_tween.kill()
+	material.set_shader_parameter("flash_color", flash_color)
+	material.set_shader_parameter("strength", 0.72)
+	feedback_tween = create_tween()
+	feedback_tween.tween_method(
+		func(value: float) -> void:
+			material.set_shader_parameter("strength", value),
+		0.72,
+		0.0,
+		0.34
+	).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
 func _update_score() -> void:
-	score_label.text = "PONTOS  %d" % score
+	score_label.text = "PONTOS: %d" % score
+	if score > record:
+		record = score
+		_update_record()
+		var config := ConfigFile.new()
+		config.load("user://ninja_matematica.cfg")
+		config.set_value("game", "record", record)
+		config.save("user://ninja_matematica.cfg")
 
 
 func _update_record() -> void:
-	record_label.text = "RECORDE  %d" % record
+	record_label.text = "RECORDE: %d" % record
 
 
 func _update_timer() -> void:
-	timer_label.text = "%02d:%02d" % [int(remaining_time) / 60, int(remaining_time) % 60]
+	var seconds_to_display := int(ceil(remaining_time))
+	if round_seconds <= 60.0:
+		seconds_to_display -= 1
+	timer_label.text = "TEMPO: %02d" % clampi(seconds_to_display, 0, 99)
 	if remaining_time <= 10.0:
 		timer_label.modulate = Color(1.0, 0.35, 0.23)
 	else:
@@ -441,11 +569,74 @@ func _end_round() -> void:
 	if score > record:
 		record = score
 		var config := ConfigFile.new()
+		config.load("user://ninja_matematica.cfg")
 		config.set_value("game", "record", record)
 		config.save("user://ninja_matematica.cfg")
 	_update_record()
-	hint_label.text = "FIM DE JOGO · %d pontos em %d tentativas" % [score, attempts]
-	status_label.text = "Acertos: %d · Tempo: %d s · Escolha JOGAR DE NOVO para outra partida" % [correct_attempts, int(elapsed_seconds)]
+	pause_button.visible = false
+	game_over_details.text = "PONTOS: %d   ·   ACERTOS: %d   ·   TENTATIVAS: %d" % [score, correct_attempts, attempts]
+	game_over_overlay.visible = true
+	hint_label.text = "FIM DE JOGO"
+
+
+func _open_pause() -> void:
+	if not game_running:
+		return
+	pause_menu.visible = true
+	pause_options.visible = false
+	pause_overlay.visible = true
+	pointer_down = false
+	slash_trail.clear_points()
+	get_tree().paused = true
+	AudioManager.play_ui()
+
+
+func _resume_game() -> void:
+	pause_overlay.visible = false
+	get_tree().paused = false
+	AudioManager.play_ui()
+
+
+func _show_pause_options() -> void:
+	pause_menu.visible = false
+	pause_options.visible = true
+	AudioManager.play_ui()
+
+
+func _show_pause_menu() -> void:
+	pause_options.visible = false
+	pause_menu.visible = true
+	AudioManager.play_ui()
+
+
+func _pause_option_toggled(enabled: bool, option_name: String) -> void:
+	if option_name == "hints":
+		settings["show_hints"] = enabled
+		hint_label.visible = enabled
+	else:
+		settings[option_name] = enabled
+	match option_name:
+		"music": AudioManager.set_music_enabled(enabled)
+		"sfx": AudioManager.set_sfx_enabled(enabled)
+		"fullscreen": AudioManager.set_fullscreen(enabled)
+	var config := ConfigFile.new()
+	config.load("user://ninja_matematica.cfg")
+	config.set_value("options", option_name, enabled)
+	config.save("user://ninja_matematica.cfg")
+	AudioManager.play_ui()
+
+
+func _retry_round() -> void:
+	if not pending_attempt.is_empty():
+		return
+	start_round()
+	AudioManager.play_ui()
+
+
+func _exit_to_menu() -> void:
+	get_tree().paused = false
+	AudioManager.play_ui()
+	SceneFlow.change_scene("res://scenes/menu.tscn")
 
 
 func _operation_title(operation_id: String) -> String:

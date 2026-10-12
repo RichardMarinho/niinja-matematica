@@ -14,15 +14,17 @@ var is_sliced := false
 var fruit_frame := 0
 
 
-func setup(number: int, fruit_frame: int, initial_velocity: Vector2) -> void:
+func setup(number: int, frame_index: int, initial_velocity: Vector2) -> void:
 	value = number
 	velocity = initial_velocity
-	self.fruit_frame = fruit_frame % 4
+	self.fruit_frame = frame_index % 4
 	if is_node_ready():
 		_apply_setup()
 
 
 func _ready() -> void:
+	if get_tree().current_scene == self and not SceneFlow.enter_scene_from_menu():
+		return
 	if value_label:
 		_apply_setup()
 

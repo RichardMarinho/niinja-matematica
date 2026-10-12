@@ -1,0 +1,540 @@
+[gd_scene format=3 uid="uid://hp2iga7hx46j"]
+
+[ext_resource type="Texture2D" uid="uid://f4v8rw7btydy" path="res://assets/dojo_wood.png" id="1_bg"]
+[ext_resource type="Script" uid="uid://cx18x3euib63f" path="res://scripts/main.gd" id="2_main"]
+[ext_resource type="PackedScene" path="res://scenes/fruit.tscn" id="3_fruit"]
+[ext_resource type="Shader" path="res://shaders/screen_feedback.gdshader" id="4_flash_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_feedback"]
+shader = ExtResource("4_flash_shader")
+shader_parameter/flash_color = Color(0.1, 1, 0.2, 1)
+shader_parameter/strength = 0.0
+shader_parameter/edge_width = 0.18
+
+[sub_resource type="SystemFont" id="SystemFont_portuguese"]
+font_names = PackedStringArray("Arial")
+
+[sub_resource type="Theme" id="Theme_portuguese"]
+default_font = SubResource("SystemFont_portuguese")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause"]
+bg_color = Color(0.96, 0.42, 0.08, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 0.82, 0.3, 1)
+corner_radius_top_left = 34
+corner_radius_top_right = 34
+corner_radius_bottom_right = 34
+corner_radius_bottom_left = 34
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.12, 0.058, 0.027, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.81, 0.46, 0.13, 0.95)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 9
+
+[node name="Main" type="Node2D" unique_id=1268758330]
+script = ExtResource("2_main")
+fruit_scene = ExtResource("3_fruit")
+
+[node name="Background" type="Sprite2D" parent="." unique_id=1701749364]
+position = Vector2(640, 360)
+scale = Vector2(0.76555, 0.76555)
+texture = ExtResource("1_bg")
+
+[node name="FruitLayer" type="Node2D" parent="." unique_id=1736608737]
+
+[node name="FruitSpawnPoints" type="Node2D" parent="." unique_id=16987431]
+
+[node name="Left" type="Marker2D" parent="FruitSpawnPoints" unique_id=382320265]
+position = Vector2(205, 675)
+
+[node name="CenterLeft" type="Marker2D" parent="FruitSpawnPoints" unique_id=1818888326]
+position = Vector2(495, 675)
+
+[node name="CenterRight" type="Marker2D" parent="FruitSpawnPoints" unique_id=962850196]
+position = Vector2(785, 675)
+
+[node name="Right" type="Marker2D" parent="FruitSpawnPoints" unique_id=1478297601]
+position = Vector2(1075, 675)
+
+[node name="SlashTrail" type="Line2D" parent="." unique_id=138434477]
+width = 7.0
+default_color = Color(1, 0.88, 0.47, 0.85)
+joint_mode = 2
+begin_cap_mode = 2
+end_cap_mode = 2
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1937390834]
+
+[node name="Root" type="Control" parent="HUD" unique_id=1502172370]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+theme = SubResource("Theme_portuguese")
+
+[node name="TopBar" type="Control" parent="HUD/Root" unique_id=1323097070]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PauseButton" type="Button" parent="HUD/Root/TopBar" unique_id=1979207671]
+custom_minimum_size = Vector2(68, 68)
+layout_mode = 1
+offset_left = 18.0
+offset_top = 14.0
+offset_right = 86.0
+offset_bottom = 82.0
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pause")
+theme_override_styles/hover = SubResource("StyleBoxFlat_pause")
+
+[node name="PauseBarLeft" type="ColorRect" parent="HUD/Root/TopBar/PauseButton" unique_id=1619437810]
+layout_mode = 1
+offset_left = 22.0
+offset_top = 21.0
+offset_right = 31.0
+offset_bottom = 47.0
+mouse_filter = 2
+
+[node name="PauseBarRight" type="ColorRect" parent="HUD/Root/TopBar/PauseButton" unique_id=1682096160]
+layout_mode = 1
+offset_left = 37.0
+offset_top = 21.0
+offset_right = 46.0
+offset_bottom = 47.0
+mouse_filter = 2
+
+[node name="TimerCard" type="Panel" parent="HUD/Root/TopBar" unique_id=782196841]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -212.0
+offset_top = 12.0
+offset_right = -18.0
+offset_bottom = 58.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Timer" type="Label" parent="HUD/Root/TopBar/TimerCard" unique_id=1057829860]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_colors/font_color = Color(1, 0.92, 0.75, 1)
+theme_override_font_sizes/font_size = 18
+text = "TEMPO: 59"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RecordCard" type="Panel" parent="HUD/Root/TopBar" unique_id=2076499883]
+layout_mode = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -212.0
+offset_top = 64.0
+offset_right = -18.0
+offset_bottom = 110.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Record" type="Label" parent="HUD/Root/TopBar/RecordCard" unique_id=1265182618]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_colors/font_color = Color(1, 0.88, 0.66, 1)
+theme_override_font_sizes/font_size = 18
+text = "RECORDE: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScoreCard" type="Panel" parent="HUD/Root/TopBar" unique_id=901867508]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -212.0
+offset_top = 116.0
+offset_right = -18.0
+offset_bottom = 162.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Score" type="Label" parent="HUD/Root/TopBar/ScoreCard" unique_id=1686651468]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_colors/font_color = Color(1, 0.85, 0.38, 1)
+theme_override_font_sizes/font_size = 19
+text = "PONTOS: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="EquationCard" type="Panel" parent="HUD/Root" unique_id=729544868]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 320.0
+offset_top = 86.0
+offset_right = -320.0
+offset_bottom = 166.0
+layout_mode = 1
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Equation" type="Label" parent="HUD/Root/EquationCard" unique_id=1783249188]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.96, 0.84, 1)
+theme_override_font_sizes/font_size = 39
+text = "12 × 3 = ?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hint" type="Label" parent="HUD/Root" unique_id=678775094]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = 0.0
+offset_top = 172.0
+offset_right = 0.0
+offset_bottom = 202.0
+layout_mode = 1
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.67, 1)
+theme_override_font_sizes/font_size = 17
+text = "Corte a fruta com a resposta certa!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FeedbackFlash" type="ColorRect" parent="HUD/Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+material = SubResource("ShaderMaterial_feedback")
+
+[node name="PauseOverlay" type="Control" parent="HUD/Root" unique_id=458630540]
+process_mode = 3
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="HUD/Root/PauseOverlay" unique_id=305069373]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.68)
+
+[node name="Center" type="Control" parent="HUD/Root/PauseOverlay" unique_id=441048839]
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="PauseCard" type="Panel" parent="HUD/Root/PauseOverlay/Center" unique_id=1935443146]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -245.0
+offset_top = -215.0
+offset_right = 245.0
+offset_bottom = 215.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Content" type="Control" parent="HUD/Root/PauseOverlay/Center/PauseCard" unique_id=1302333734]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 26.0
+offset_top = 22.0
+offset_right = 464.0
+offset_bottom = 408.0
+
+[node name="Title" type="Label" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content" unique_id=1251770175]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 438.0
+offset_bottom = 62.0
+layout_mode = 1
+theme_override_colors/font_color = Color(1, 0.82, 0.3, 1)
+theme_override_font_sizes/font_size = 34
+text = "PAUSADO"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PauseMenu" type="Control" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content" unique_id=2047111111]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 0.0
+offset_top = 78.0
+offset_right = 438.0
+offset_bottom = 280.0
+
+[node name="ResumeButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu" unique_id=969026927]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 39.0
+offset_top = 0.0
+offset_right = 399.0
+offset_bottom = 54.0
+layout_mode = 1
+theme_override_font_sizes/font_size = 23
+text = "CONTINUAR"
+
+[node name="OptionsButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu" unique_id=148866861]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 39.0
+offset_top = 70.0
+offset_right = 399.0
+offset_bottom = 124.0
+layout_mode = 1
+theme_override_font_sizes/font_size = 23
+text = "OPÇÕES"
+
+[node name="ExitButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu" unique_id=1359486005]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 39.0
+offset_top = 140.0
+offset_right = 399.0
+offset_bottom = 194.0
+layout_mode = 1
+theme_override_font_sizes/font_size = 23
+text = "SAIR PARA O MENU"
+
+[node name="PauseOptions" type="Control" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content" unique_id=890488488]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 0.0
+offset_top = 78.0
+offset_right = 438.0
+offset_bottom = 306.0
+visible = false
+
+[node name="MusicCheck" type="CheckButton" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=133343641]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 29.0
+offset_top = 0.0
+offset_right = 409.0
+offset_bottom = 44.0
+layout_mode = 1
+theme_override_font_sizes/font_size = 19
+text = "Música"
+
+[node name="SfxCheck" type="CheckButton" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=971305091]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 29.0
+offset_top = 48.0
+offset_right = 409.0
+offset_bottom = 92.0
+layout_mode = 1
+theme_override_font_sizes/font_size = 19
+text = "Efeitos sonoros"
+
+[node name="HintsCheck" type="CheckButton" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=287798508]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 29.0
+offset_top = 96.0
+offset_right = 409.0
+offset_bottom = 140.0
+layout_mode = 1
+theme_override_font_sizes/font_size = 19
+text = "Dicas"
+
+[node name="FullscreenCheck" type="CheckButton" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=1352292233]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 29.0
+offset_top = 144.0
+offset_right = 409.0
+offset_bottom = 188.0
+layout_mode = 1
+theme_override_font_sizes/font_size = 19
+text = "Tela cheia"
+
+[node name="BackButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=1391461655]
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 59.0
+offset_top = 224.0
+offset_right = 379.0
+offset_bottom = 272.0
+layout_mode = 1
+theme_override_font_sizes/font_size = 20
+text = "VOLTAR"
+
+[node name="GameOverOverlay" type="Control" parent="HUD/Root" unique_id=241512329]
+process_mode = 3
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="HUD/Root/GameOverOverlay" unique_id=245872962]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.72)
+
+[node name="Center" type="Control" parent="HUD/Root/GameOverOverlay" unique_id=213099900]
+layout_mode = 1
+anchors_preset = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="GameOverCard" type="Panel" parent="HUD/Root/GameOverOverlay/Center" unique_id=1572993525]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -190.0
+offset_right = 280.0
+offset_bottom = 190.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="Content" type="Control" parent="HUD/Root/GameOverOverlay/Center/GameOverCard" unique_id=1122971597]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 28.0
+offset_top = 24.0
+offset_right = 532.0
+offset_bottom = 356.0
+
+[node name="Title" type="Label" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=1704499750]
+layout_mode = 1
+offset_right = 504.0
+offset_bottom = 70.0
+theme_override_colors/font_color = Color(1, 0.42, 0.24, 1)
+theme_override_font_sizes/font_size = 42
+text = "VOCÊ PERDEU!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Details" type="Label" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=2116777112]
+layout_mode = 1
+offset_top = 90.0
+offset_right = 504.0
+offset_bottom = 144.0
+theme_override_colors/font_color = Color(1, 0.92, 0.75, 1)
+theme_override_font_sizes/font_size = 19
+text = "PONTOS: 0   |   ACERTOS: 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RetryButton" type="Button" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=1379399717]
+layout_mode = 1
+offset_left = 62.0
+offset_top = 176.0
+offset_right = 442.0
+offset_bottom = 234.0
+theme_override_font_sizes/font_size = 23
+text = "TENTAR NOVAMENTE"
+
+[node name="ExitButton" type="Button" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=536348199]
+layout_mode = 1
+offset_left = 62.0
+offset_top = 248.0
+offset_right = 442.0
+offset_bottom = 302.0
+theme_override_font_sizes/font_size = 22
+text = "SAIR PARA O MENU"
+
+[node name="API" type="HTTPRequest" parent="." unique_id=617210625]
+timeout = 12.0
