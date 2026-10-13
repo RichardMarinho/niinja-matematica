@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://b4v04clr2q6pb"]
 
-[ext_resource type="Texture2D" uid="uid://f4v8rw7btydy" path="res://assets/dojo_wood.png" id="1_bg"]
+[ext_resource type="Texture2D" path="res://assets/game_chocolate_bg.png" id="1_bg"]
 [ext_resource type="Script" uid="uid://bb35kp1p13xqa" path="res://scripts/preparation.gd" id="2_script"]
 
 [sub_resource type="SystemFont" id="SystemFont_portuguese"]
@@ -43,7 +43,7 @@ script = ExtResource("2_script")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=1055777583]
 position = Vector2(640, 360)
-scale = Vector2(0.76555, 0.76555)
+scale = Vector2(0.789, 0.789)
 texture = ExtResource("1_bg")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=504574192]
@@ -310,7 +310,7 @@ offset_right = 676.0
 offset_bottom = 170.0
 theme_override_colors/font_color = Color(1, 0.94, 0.81, 1)
 theme_override_font_sizes/font_size = 18
-text = "As contas são mais tranquilas. As frutas vêm devagar e você tem mais tempo. Errar tira pouquinho tempo."
+text = "As contas são tranquilas. Os doces vêm devagar e sobra tempo pra pensar. Se errar, perde só um pouquinho de tempo."
 autowrap_mode = 2
 
 [node name="NormalHeading" type="Label" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1785829697]
@@ -329,7 +329,7 @@ offset_right = 676.0
 offset_bottom = 286.0
 theme_override_colors/font_color = Color(1, 0.94, 0.81, 1)
 theme_override_font_sizes/font_size = 18
-text = "Um desafio na medida! As contas e a velocidade ficam no meio-termo. Errar tira um pouco de tempo."
+text = "Desafio na medida! As contas e a velocidade ficam no meio. Errou? Perde um pouco de tempo."
 autowrap_mode = 2
 
 [node name="HardHeading" type="Label" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1625162906]
@@ -348,7 +348,7 @@ offset_right = 676.0
 offset_bottom = 402.0
 theme_override_colors/font_color = Color(1, 0.94, 0.81, 1)
 theme_override_font_sizes/font_size = 18
-text = "Pra quem quer mais desafio! As contas ficam difíceis, as frutas voam mais rápido e sobra menos tempo. Errar tira mais tempo."
+text = "Partiu desafio? As contas ficam mais difíceis, os doces voam e sobra menos tempo. Errar tira mais tempo."
 autowrap_mode = 2
 
 [node name="HelpCloseButton" type="Button" parent="HUD/Root/DifficultyHelp/HelpCard/HelpContent" unique_id=1179290758]

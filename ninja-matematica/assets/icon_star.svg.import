@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3w1x6e63osbr"
-path="res://.godot/imported/fruit_sheet.png-00bdd482f1f0317bc1aed5286a666df1.ctex"
+uid="uid://c07jpgbbs3u5j"
+path="res://.godot/imported/icon_star.svg-9344a1f83cac8145e6df0b1a06921e19.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/fruit_sheet.png"
-dest_files=["res://.godot/imported/fruit_sheet.png-00bdd482f1f0317bc1aed5286a666df1.ctex"]
+source_file="res://assets/icon_star.svg"
+dest_files=["res://.godot/imported/icon_star.svg-9344a1f83cac8145e6df0b1a06921e19.ctex"]
 
 [params]
 
@@ -38,3 +38,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

@@ -1,8 +1,8 @@
 extends Node2D
 
-@onready var play_button: Button = $HUD/Root/Center/MenuContent/PlayButton
-@onready var options_button: Button = $HUD/Root/Center/MenuContent/OptionsButton
-@onready var quit_button: Button = $HUD/Root/Center/MenuContent/QuitButton
+@onready var play_button: Button = $HUD/Root/PlayButton
+@onready var options_button: Button = $HUD/Root/OptionsButton
+@onready var quit_button: Button = $HUD/Root/QuitButton
 
 
 func _ready() -> void:

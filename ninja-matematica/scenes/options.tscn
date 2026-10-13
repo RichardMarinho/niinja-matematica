@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/dojo_wood.png" id="1_bg"]
+[ext_resource type="Texture2D" path="res://assets/game_chocolate_bg.png" id="1_bg"]
 [ext_resource type="Script" path="res://scripts/options.gd" id="2_script"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
@@ -32,7 +32,7 @@ script = ExtResource("2_script")
 [node name="Background" type="Sprite2D" parent="."]
 position = Vector2(640, 360)
 texture = ExtResource("1_bg")
-scale = Vector2(0.76555, 0.76555)
+scale = Vector2(0.789, 0.789)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 

@@ -1,9 +1,13 @@
 [gd_scene format=3 uid="uid://hp2iga7hx46j"]
 
-[ext_resource type="Texture2D" uid="uid://f4v8rw7btydy" path="res://assets/dojo_wood.png" id="1_bg"]
+[ext_resource type="Texture2D" path="res://assets/game_chocolate_bg.png" id="1_bg"]
 [ext_resource type="Script" uid="uid://cx18x3euib63f" path="res://scripts/main.gd" id="2_main"]
-[ext_resource type="PackedScene" path="res://scenes/fruit.tscn" id="3_fruit"]
+[ext_resource type="PackedScene" path="res://scenes/candy.tscn" id="3_candy"]
 [ext_resource type="Shader" path="res://shaders/screen_feedback.gdshader" id="4_flash_shader"]
+[ext_resource type="Texture2D" path="res://assets/icon_timer.svg" id="5_timer_icon"]
+[ext_resource type="Texture2D" path="res://assets/icon_crown.svg" id="6_crown_icon"]
+[ext_resource type="Texture2D" path="res://assets/icon_star.svg" id="7_star_icon"]
+[ext_resource type="Texture2D" path="res://assets/equation_ornaments.svg" id="8_equation_ornaments"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_feedback"]
 shader = ExtResource("4_flash_shader")
@@ -47,35 +51,30 @@ shadow_size = 9
 
 [node name="Main" type="Node2D" unique_id=1268758330]
 script = ExtResource("2_main")
-fruit_scene = ExtResource("3_fruit")
+candy_scene = ExtResource("3_candy")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=1701749364]
 position = Vector2(640, 360)
-scale = Vector2(0.76555, 0.76555)
+scale = Vector2(0.789, 0.789)
 texture = ExtResource("1_bg")
 
-[node name="FruitLayer" type="Node2D" parent="." unique_id=1736608737]
+[node name="CrackLayer" type="Node2D" parent="." unique_id=1701749365]
 
-[node name="FruitSpawnPoints" type="Node2D" parent="." unique_id=16987431]
+[node name="CandyLayer" type="Node2D" parent="." unique_id=1736608737]
 
-[node name="Left" type="Marker2D" parent="FruitSpawnPoints" unique_id=382320265]
+[node name="CandySpawnPoints" type="Node2D" parent="." unique_id=16987431]
+
+[node name="Left" type="Marker2D" parent="CandySpawnPoints" unique_id=382320265]
 position = Vector2(205, 675)
 
-[node name="CenterLeft" type="Marker2D" parent="FruitSpawnPoints" unique_id=1818888326]
+[node name="CenterLeft" type="Marker2D" parent="CandySpawnPoints" unique_id=1818888326]
 position = Vector2(495, 675)
 
-[node name="CenterRight" type="Marker2D" parent="FruitSpawnPoints" unique_id=962850196]
+[node name="CenterRight" type="Marker2D" parent="CandySpawnPoints" unique_id=962850196]
 position = Vector2(785, 675)
 
-[node name="Right" type="Marker2D" parent="FruitSpawnPoints" unique_id=1478297601]
+[node name="Right" type="Marker2D" parent="CandySpawnPoints" unique_id=1478297601]
 position = Vector2(1075, 675)
-
-[node name="SlashTrail" type="Line2D" parent="." unique_id=138434477]
-width = 7.0
-default_color = Color(1, 0.88, 0.47, 0.85)
-joint_mode = 2
-begin_cap_mode = 2
-end_cap_mode = 2
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1937390834]
 
@@ -140,11 +139,24 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 layout_mode = 1
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 43.0
+offset_right = -7.0
 theme_override_colors/font_color = Color(1, 0.92, 0.75, 1)
 theme_override_font_sizes/font_size = 18
 text = "TEMPO: 59"
-horizontal_alignment = 1
+horizontal_alignment = 0
 vertical_alignment = 1
+
+[node name="TimerIcon" type="TextureRect" parent="HUD/Root/TopBar/TimerCard"]
+layout_mode = 1
+offset_left = 11.0
+offset_top = 9.0
+offset_right = 39.0
+offset_bottom = 37.0
+mouse_filter = 2
+texture = ExtResource("5_timer_icon")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="RecordCard" type="Panel" parent="HUD/Root/TopBar" unique_id=2076499883]
 layout_mode = 1
@@ -161,11 +173,24 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 layout_mode = 1
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 43.0
+offset_right = -7.0
 theme_override_colors/font_color = Color(1, 0.88, 0.66, 1)
 theme_override_font_sizes/font_size = 18
 text = "RECORDE: 0"
-horizontal_alignment = 1
+horizontal_alignment = 0
 vertical_alignment = 1
+
+[node name="CrownIcon" type="TextureRect" parent="HUD/Root/TopBar/RecordCard"]
+layout_mode = 1
+offset_left = 10.0
+offset_top = 9.0
+offset_right = 39.0
+offset_bottom = 38.0
+mouse_filter = 2
+texture = ExtResource("6_crown_icon")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="ScoreCard" type="Panel" parent="HUD/Root/TopBar" unique_id=901867508]
 layout_mode = 1
@@ -183,11 +208,24 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 layout_mode = 1
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 43.0
+offset_right = -7.0
 theme_override_colors/font_color = Color(1, 0.85, 0.38, 1)
 theme_override_font_sizes/font_size = 19
 text = "PONTOS: 0"
-horizontal_alignment = 1
+horizontal_alignment = 0
 vertical_alignment = 1
+
+[node name="StarIcon" type="TextureRect" parent="HUD/Root/TopBar/ScoreCard"]
+layout_mode = 1
+offset_left = 10.0
+offset_top = 9.0
+offset_right = 39.0
+offset_bottom = 38.0
+mouse_filter = 2
+texture = ExtResource("7_star_icon")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="EquationCard" type="Panel" parent="HUD/Root" unique_id=729544868]
 anchors_preset = 0
@@ -203,6 +241,18 @@ layout_mode = 1
 grow_horizontal = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="EquationOrnaments" type="TextureRect" parent="HUD/Root/EquationCard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("8_equation_ornaments")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Equation" type="Label" parent="HUD/Root/EquationCard" unique_id=1783249188]
 layout_mode = 1
@@ -231,7 +281,7 @@ layout_mode = 1
 grow_horizontal = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.67, 1)
 theme_override_font_sizes/font_size = 17
-text = "Corte a fruta com a resposta certa!"
+text = "Acerte um doce com o martelo!"
 horizontal_alignment = 1
 vertical_alignment = 1
 

@@ -1,13 +1,13 @@
 extends Node2D
 
-@export var fruit_scene: PackedScene
+@export var candy_scene: PackedScene
 @export_range(5.0, 120.0, 1.0) var round_seconds := 60.0
 @export_range(0.5, 5.0, 0.1) var spawn_interval := 1.9
-@export_range(0.2, 2.0, 0.05) var swipe_width := 50.0
+@export_range(24.0, 100.0, 2.0) var hammer_hit_radius := 58.0
 @export_range(0.0, 120.0, 5.0) var spawn_point_jitter := 35.0
-@export_range(300.0, 1200.0, 25.0) var fruit_launch_speed_min := 610.0
-@export_range(300.0, 1400.0, 25.0) var fruit_launch_speed_max := 710.0
-@export_range(0.0, 250.0, 10.0) var fruit_horizontal_spread := 90.0
+@export_range(300.0, 1200.0, 25.0) var candy_launch_speed_min := 610.0
+@export_range(300.0, 1400.0, 25.0) var candy_launch_speed_max := 710.0
+@export_range(0.0, 250.0, 10.0) var candy_horizontal_spread := 90.0
 @export var game_id := "ninja-matematica"
 @export var api_base_url := "http://127.0.0.1:3001"
 
@@ -39,9 +39,9 @@ const DIFFICULTIES := {
 	"hard": {"title": "DIFÍCIL", "seconds": 45.0, "penalty": 5.0, "spawn": 1.45, "speed_min": 740.0, "speed_max": 860.0, "number_min": 10, "number_max": 99, "tier": 2},
 }
 
-@onready var fruit_layer: Node2D = $FruitLayer
-@onready var fruit_spawn_points: Node2D = $FruitSpawnPoints
-@onready var slash_trail: Line2D = $SlashTrail
+@onready var candy_layer: Node2D = $CandyLayer
+@onready var crack_layer: Node2D = $CrackLayer
+@onready var candy_spawn_points: Node2D = $CandySpawnPoints
 @onready var api: HTTPRequest = $API
 @onready var score_label: Label = $HUD/Root/TopBar/ScoreCard/Score
 @onready var timer_label: Label = $HUD/Root/TopBar/TimerCard/Timer
@@ -81,7 +81,6 @@ var game_running := false
 var request_pending := false
 var pointer_down := false
 var previous_pointer := Vector2.ZERO
-var trail_points: Array[Vector2] = []
 var active_question: Dictionary = {}
 var local_mode := true
 var api_token := ""
@@ -141,8 +140,8 @@ func _ready() -> void:
 	game_over_overlay.visible = false
 	round_seconds = float(difficulty.seconds)
 	spawn_interval = float(difficulty.spawn)
-	fruit_launch_speed_min = float(difficulty.speed_min)
-	fruit_launch_speed_max = float(difficulty.speed_max)
+	candy_launch_speed_min = float(difficulty.speed_min)
+	candy_launch_speed_max = float(difficulty.speed_max)
 	hint_label.visible = bool(settings.show_hints)
 	_update_score()
 	_update_record()
@@ -160,8 +159,8 @@ func start_round() -> void:
 	pause_overlay.visible = false
 	game_over_overlay.visible = false
 	pause_button.visible = true
-	for fruit in fruit_layer.get_children():
-		fruit.queue_free()
+	for candy in candy_layer.get_children():
+		candy.queue_free()
 	score = 0
 	combo = 0
 	remaining_time = round_seconds
@@ -188,7 +187,6 @@ func _process(delta: float) -> void:
 		_update_timer()
 		if remaining_time <= 0.0:
 			_end_round()
-	_update_trail(delta)
 	if not pending_attempt.is_empty() and not request_pending:
 		retry_clock -= delta
 		if retry_clock <= 0.0:
@@ -200,39 +198,37 @@ func _unhandled_input(event: InputEvent) -> void:
 		pointer_down = event.pressed
 		if pointer_down:
 			previous_pointer = get_global_mouse_position()
-			trail_points.clear()
-		if not pointer_down:
-			slash_trail.clear_points()
+			_handle_hammer_swing(previous_pointer)
 	elif event is InputEventMouseMotion and pointer_down:
-		_handle_swipe(get_global_mouse_position())
+		_handle_hammer_swing(get_global_mouse_position())
 	elif event is InputEventScreenTouch:
 		pointer_down = event.pressed
 		if pointer_down:
 			previous_pointer = event.position
-			trail_points.clear()
-		if not pointer_down:
-			slash_trail.clear_points()
+			_handle_hammer_swing(previous_pointer)
 	elif event is InputEventScreenDrag and pointer_down:
-		_handle_swipe(event.position)
+		_handle_hammer_swing(event.position)
 
 
-func _handle_swipe(pointer_position: Vector2) -> void:
+func _handle_hammer_swing(pointer_position: Vector2) -> void:
 	if not game_running or request_pending:
 		previous_pointer = pointer_position
 		return
-	trail_points.append(pointer_position)
-	if trail_points.size() > 10:
-		trail_points.pop_front()
-	slash_trail.clear_points()
-	for point in trail_points:
-		slash_trail.add_point(point)
-	for node in fruit_layer.get_children():
-		var fruit := node as GaussFruit
-		if fruit and not fruit.is_sliced and _distance_to_segment(fruit.global_position, previous_pointer, pointer_position) <= minf(swipe_width, fruit.slash_radius()):
-			fruit.slice()
-			AudioManager.play_slice()
+	for node in candy_layer.get_children():
+		var candy := node as GaussCandy
+		if candy and not candy.is_smashed and _distance_to_segment(candy.global_position, previous_pointer, pointer_position) <= minf(hammer_hit_radius, candy.hit_radius()):
+			candy.smash()
+			AudioManager.play_smash()
 			break
 	previous_pointer = pointer_position
+
+
+func _spawn_background_crack(hit_position: Vector2) -> void:
+	var crack := Node2D.new()
+	crack.set_script(preload("res://scripts/background_crack.gd"))
+	crack.position = hit_position
+	crack_layer.add_child(crack)
+	crack.play()
 
 
 func _distance_to_segment(point: Vector2, start: Vector2, finish: Vector2) -> float:
@@ -243,28 +239,20 @@ func _distance_to_segment(point: Vector2, start: Vector2, finish: Vector2) -> fl
 	return point.distance_to(start + segment * projection)
 
 
-func _update_trail(delta: float) -> void:
-	if not pointer_down and slash_trail.points.size() > 0:
-		slash_trail.modulate.a = maxf(0.0, slash_trail.modulate.a - delta * 5.0)
-		if slash_trail.modulate.a <= 0.0:
-			slash_trail.clear_points()
-			slash_trail.modulate.a = 1.0
-
-
 func _spawn_wave() -> void:
 	if active_question.is_empty():
 		return
 	var answers: Array[int] = _make_choices(_question_target(active_question))
-	var points := fruit_spawn_points.get_children()
+	var points := candy_spawn_points.get_children()
 	for index in range(answers.size()):
 		var spawn_point := points[index % points.size()] as Marker2D
-		var launch := Vector2(randf_range(-fruit_horizontal_spread, fruit_horizontal_spread), -randf_range(fruit_launch_speed_min, fruit_launch_speed_max))
-		var fruit := fruit_scene.instantiate() as GaussFruit
-		fruit.setup(answers[index], randi_range(0, 3), launch)
-		fruit.position = spawn_point.position + Vector2(randf_range(-spawn_point_jitter, spawn_point_jitter), randf_range(50.0, 100.0))
-		fruit.scale = Vector2.ONE * randf_range(0.91, 1.05)
-		fruit.sliced.connect(_on_fruit_sliced)
-		fruit_layer.add_child(fruit)
+		var launch := Vector2(randf_range(-candy_horizontal_spread, candy_horizontal_spread), -randf_range(candy_launch_speed_min, candy_launch_speed_max))
+		var candy := candy_scene.instantiate() as GaussCandy
+		candy.setup(answers[index], randi_range(0, 15), launch)
+		candy.position = spawn_point.position + Vector2(randf_range(-spawn_point_jitter, spawn_point_jitter), randf_range(50.0, 100.0))
+		candy.scale = Vector2.ONE * randf_range(0.91, 1.05)
+		candy.smashed.connect(_on_candy_smashed)
+		candy_layer.add_child(candy)
 
 
 func _make_choices(answer: int) -> Array[int]:
@@ -374,16 +362,19 @@ func _question_target(question: Dictionary) -> int:
 	return 0
 
 
-func _on_fruit_sliced(fruit: GaussFruit) -> void:
+func _on_candy_smashed(candy: GaussCandy) -> void:
 	if not game_running or request_pending:
 		return
+	_spawn_background_crack(candy.global_position)
 	request_pending = true
 	attempts += 1
-	for node in fruit_layer.get_children():
-		if node != fruit:
-			node.queue_free()
+	for node in candy_layer.get_children():
+		var remaining_candy := node as GaussCandy
+		if remaining_candy and remaining_candy != candy:
+			remaining_candy.fall_away()
+	spawn_clock = maxf(spawn_clock, 0.85)
 	if local_mode:
-		_resolve_attempt(fruit.value == _question_target(active_question), fruit.value)
+		_resolve_attempt(candy.value == _question_target(active_question), candy.value)
 		return
 	pending_attempt = {
 		"eventId": _event_id(),
@@ -393,7 +384,7 @@ func _on_fruit_sliced(fruit: GaussFruit) -> void:
 		"lessonVersion": active_question.get("lessonVersion", 1),
 		"phaseId": active_question.get("phaseId", "practice"),
 		"exerciseId": active_question.get("exerciseId", ""),
-		"choice": fruit.value,
+		"choice": candy.value,
 		"practiceMode": "free_practice",
 		"occurredAt": Time.get_datetime_string_from_system(true),
 	}
@@ -511,10 +502,10 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 		AudioManager.play_mistake()
 		var penalty := float(difficulty.get("penalty", 3.0))
 		remaining_time = maxf(0.0, remaining_time - penalty)
-		hint_label.text = "Essa fruta não completa a conta. Tente a próxima!"
+		hint_label.text = "Ops! Esse não era o doce certo. Tente outro!"
 	_update_score()
 	_update_timer()
-	if game_running:
+	if game_running and is_correct:
 		_request_next_question()
 
 
@@ -586,7 +577,6 @@ func _open_pause() -> void:
 	pause_options.visible = false
 	pause_overlay.visible = true
 	pointer_down = false
-	slash_trail.clear_points()
 	get_tree().paused = true
 	AudioManager.play_ui()
 

@@ -7,7 +7,7 @@ var music_player: AudioStreamPlayer
 var sfx_player: AudioStreamPlayer
 var music_enabled := true
 var sfx_enabled := true
-var slice_stream: AudioStreamWAV
+var smash_stream: AudioStreamWAV
 var mistake_stream: AudioStreamWAV
 var ui_stream: AudioStreamWAV
 
@@ -22,7 +22,7 @@ func _ready() -> void:
 	sfx_player.volume_db = -7.0
 	add_child(sfx_player)
 	music_player.stream = _make_music_loop()
-	slice_stream = _make_tone(880.0, 0.16, true)
+	smash_stream = _make_tone(260.0, 0.12, true)
 	mistake_stream = _make_tone(190.0, 0.24, false)
 	ui_stream = _make_tone(560.0, 0.07, false)
 	var config := ConfigFile.new()
@@ -54,8 +54,12 @@ func set_fullscreen(enabled: bool) -> void:
 	DisplayServer.window_set_mode(mode)
 
 
+func play_smash() -> void:
+	_play(smash_stream)
+
+
 func play_slice() -> void:
-	_play(sliced_stream())
+	play_smash()
 
 
 func play_mistake() -> void:
@@ -67,7 +71,7 @@ func play_ui() -> void:
 
 
 func sliced_stream() -> AudioStreamWAV:
-	return slice_stream
+	return smash_stream
 
 
 func _play(stream: AudioStreamWAV) -> void:

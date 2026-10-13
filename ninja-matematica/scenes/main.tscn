@@ -1,7 +1,54 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bf1746cdwlaxf"]
 
 [ext_resource type="PackedScene" path="res://scenes/menu.tscn" id="1_menu"]
 
-[node name="MainMenu" instance=ExtResource("1_menu")]
+[node name="MainMenu" unique_id=1388407335 instance=ExtResource("1_menu")]
 
-[editable path="MainMenu"]
+[node name="Background" parent="." index="0"]
+texture = null
+
+[node name="PlayButton" parent="HUD/Root" index="0"]
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ChalkDoodles" type="TextureRect" parent="HUD/Root" index="1" unique_id=587027988]
+layout_mode = 1
+offset_left = 1101.0
+offset_top = 189.0
+offset_right = 1289.0
+offset_bottom = 399.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ChalkEquationOne" type="Label" parent="HUD/Root" index="2" unique_id=1421427992]
+layout_mode = 1
+offset_left = 1098.0
+offset_top = 223.0
+offset_right = 1270.0
+offset_bottom = 263.0
+rotation = -0.08
+theme_override_colors/font_color = Color(0.86, 0.8, 0.74, 0.78)
+theme_override_font_sizes/font_size = 22
+text = "2 + 3 = 5"
+horizontal_alignment = 1
+
+[node name="ChalkEquationTwo" type="Label" parent="HUD/Root" index="3" unique_id=1248665829]
+layout_mode = 1
+offset_left = 1104.0
+offset_top = 263.0
+offset_right = 1266.0
+offset_bottom = 301.0
+rotation = -0.06
+theme_override_colors/font_color = Color(0.86, 0.8, 0.74, 0.68)
+theme_override_font_sizes/font_size = 20
+text = "4 x 2 = 8"
+horizontal_alignment = 1
+
+[node name="OptionsButton" parent="HUD/Root" index="4"]
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="QuitButton" parent="HUD/Root" index="5"]
+grow_horizontal = 2
+grow_vertical = 2
