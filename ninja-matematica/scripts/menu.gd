@@ -25,3 +25,7 @@ func _open_options() -> void:
 func _quit_game() -> void:
 	AudioManager.play_ui()
 	get_tree().quit()
+
+
+func _on_background_draw() -> void:
+	pass # Replace with function body.

@@ -51,6 +51,8 @@ const DIFFICULTIES := {
 @onready var feedback_flash: ColorRect = $HUD/Root/FeedbackFlash
 @onready var pause_button: Button = $HUD/Root/TopBar/PauseButton
 @onready var pause_overlay: Control = $HUD/Root/PauseOverlay
+@onready var pause_art: TextureRect = $HUD/Root/PauseOverlay/Center/PauseArt
+@onready var pause_options_art: TextureRect = $HUD/Root/PauseOverlay/Center/PauseOptionsArt
 @onready var pause_menu: Control = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu
 @onready var pause_options: Control = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions
 @onready var resume_button: Button = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu/ResumeButton
@@ -61,6 +63,18 @@ const DIFFICULTIES := {
 @onready var sfx_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/SfxCheck
 @onready var hints_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/HintsCheck
 @onready var fullscreen_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenCheck
+@onready var pause_toggle_tracks: Array[Panel] = [
+	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/MusicTrack,
+	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/SfxTrack,
+	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/HintsTrack,
+	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenTrack,
+]
+@onready var pause_toggle_knobs: Array[Panel] = [
+	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/MusicTrack/MusicKnob,
+	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/SfxTrack/SfxKnob,
+	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/HintsTrack/HintsKnob,
+	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenTrack/FullscreenKnob,
+]
 @onready var game_over_overlay: Control = $HUD/Root/GameOverOverlay
 @onready var game_over_details: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/Details
 @onready var retry_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/RetryButton
@@ -132,6 +146,7 @@ func _ready() -> void:
 	sfx_check.button_pressed = bool(settings.sfx)
 	hints_check.button_pressed = bool(settings.show_hints)
 	fullscreen_check.button_pressed = bool(settings.fullscreen)
+	_sync_pause_toggle_art()
 	music_check.toggled.connect(_pause_option_toggled.bind("music"))
 	sfx_check.toggled.connect(_pause_option_toggled.bind("sfx"))
 	hints_check.toggled.connect(_pause_option_toggled.bind("hints"))
@@ -590,12 +605,16 @@ func _resume_game() -> void:
 func _show_pause_options() -> void:
 	pause_menu.visible = false
 	pause_options.visible = true
+	pause_art.visible = false
+	pause_options_art.visible = true
 	AudioManager.play_ui()
 
 
 func _show_pause_menu() -> void:
 	pause_options.visible = false
 	pause_menu.visible = true
+	pause_art.visible = true
+	pause_options_art.visible = false
 	AudioManager.play_ui()
 
 
@@ -613,7 +632,21 @@ func _pause_option_toggled(enabled: bool, option_name: String) -> void:
 	config.load("user://ninja_matematica.cfg")
 	config.set_value("options", option_name, enabled)
 	config.save("user://ninja_matematica.cfg")
+	_sync_pause_toggle_art()
 	AudioManager.play_ui()
+
+
+func _sync_pause_toggle_art() -> void:
+	if not is_node_ready():
+		return
+	var states := [music_check.button_pressed, sfx_check.button_pressed, hints_check.button_pressed, fullscreen_check.button_pressed]
+	for index in range(states.size()):
+		var enabled: bool = states[index]
+		var track := StyleBoxFlat.new()
+		track.bg_color = Color("#f32678") if enabled else Color("#555255")
+		track.set_corner_radius_all(18)
+		pause_toggle_tracks[index].add_theme_stylebox_override("panel", track)
+		pause_toggle_knobs[index].position.x = 36.0 if enabled else 3.0
 
 
 func _retry_round() -> void:

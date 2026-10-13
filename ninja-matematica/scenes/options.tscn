@@ -1,7 +1,9 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/game_chocolate_bg.png" id="1_bg"]
 [ext_resource type="Script" path="res://scripts/options.gd" id="2_script"]
+[ext_resource type="Texture2D" path="res://assets/options_reference.png" id="3_reference"]
+[ext_resource type="Texture2D" path="res://assets/transparent.svg" id="4_transparent"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 bg_color = Color(0.13, 0.062, 0.028, 0.9)
@@ -26,6 +28,29 @@ allow_system_fallback = true
 [sub_resource type="Theme" id="Theme_portuguese"]
 default_font = SubResource("SystemFont_portuguese")
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hit_area"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toggle_on"]
+bg_color = Color(0.95, 0.12, 0.45, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toggle_off"]
+bg_color = Color(0.33, 0.31, 0.32, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_knob"]
+bg_color = Color(1, 0.95, 0.84, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
 [node name="Options" type="Node2D"]
 script = ExtResource("2_script")
 
@@ -33,6 +58,11 @@ script = ExtResource("2_script")
 position = Vector2(640, 360)
 texture = ExtResource("1_bg")
 scale = Vector2(0.789, 0.789)
+
+[node name="OptionsReference" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+texture = ExtResource("3_reference")
+scale = Vector2(0.7655, 0.7655)
 
 [node name="HUD" type="CanvasLayer" parent="."]
 
@@ -68,7 +98,7 @@ offset_left = -310.0
 offset_top = -260.0
 offset_right = 310.0
 offset_bottom = 260.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_hit_area")
 
 [node name="Content" type="Control" parent="HUD/Root/Center/Card"]
 layout_mode = 1
@@ -83,6 +113,7 @@ offset_right = 592.0
 offset_bottom = 496.0
 
 [node name="Title" type="Label" parent="HUD/Root/Center/Card/Content"]
+visible = false
 layout_mode = 1
 anchors_preset = 0
 anchor_left = 0
@@ -106,12 +137,25 @@ anchor_left = 0
 anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
-offset_left = 36.0
-offset_top = 96.0
-offset_right = 496.0
-offset_bottom = 146.0
+offset_left = -40.0
+offset_top = 76.0
+offset_right = 601.0
+offset_bottom = 151.0
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+modulate = Color(1, 1, 1, 0)
+theme_override_icons/checked = ExtResource("4_transparent")
+theme_override_icons/unchecked = ExtResource("4_transparent")
 theme_override_font_sizes/font_size = 22
 text = "Música"
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 
 [node name="SfxCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content"]
 layout_mode = 1
@@ -120,12 +164,25 @@ anchor_left = 0
 anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
-offset_left = 36.0
+offset_left = -40.0
 offset_top = 158.0
-offset_right = 496.0
-offset_bottom = 208.0
+offset_right = 601.0
+offset_bottom = 233.0
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+modulate = Color(1, 1, 1, 0)
+theme_override_icons/checked = ExtResource("4_transparent")
+theme_override_icons/unchecked = ExtResource("4_transparent")
 theme_override_font_sizes/font_size = 22
 text = "Efeitos sonoros"
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 
 [node name="HintsCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content"]
 layout_mode = 1
@@ -134,12 +191,25 @@ anchor_left = 0
 anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
-offset_left = 36.0
-offset_top = 220.0
-offset_right = 496.0
-offset_bottom = 270.0
+offset_left = -40.0
+offset_top = 240.0
+offset_right = 601.0
+offset_bottom = 315.0
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+modulate = Color(1, 1, 1, 0)
+theme_override_icons/checked = ExtResource("4_transparent")
+theme_override_icons/unchecked = ExtResource("4_transparent")
 theme_override_font_sizes/font_size = 22
 text = "Dicas durante a partida"
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 
 [node name="FullscreenCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content"]
 layout_mode = 1
@@ -148,12 +218,25 @@ anchor_left = 0
 anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
-offset_left = 36.0
-offset_top = 282.0
-offset_right = 496.0
-offset_bottom = 332.0
+offset_left = -40.0
+offset_top = 321.0
+offset_right = 601.0
+offset_bottom = 396.0
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+modulate = Color(1, 1, 1, 0)
+theme_override_icons/checked = ExtResource("4_transparent")
+theme_override_icons/unchecked = ExtResource("4_transparent")
 theme_override_font_sizes/font_size = 22
 text = "Tela cheia"
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 
 [node name="BackButton" type="Button" parent="HUD/Root/Center/Card/Content"]
 layout_mode = 1
@@ -162,9 +245,90 @@ anchor_left = 0
 anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
-offset_left = 132.0
-offset_top = 404.0
-offset_right = 432.0
-offset_bottom = 462.0
+offset_left = 96.0
+offset_top = 412.0
+offset_right = 464.0
+offset_bottom = 493.0
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_colors/font_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 22
 text = "VOLTAR AO MENU"
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
+
+[node name="ToggleArt" type="Control" parent="HUD/Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="MusicTrack" type="Panel" parent="HUD/Root/ToggleArt"]
+offset_left = 861.0
+offset_top = 218.0
+offset_right = 932.0
+offset_bottom = 255.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_on")
+
+[node name="MusicKnob" type="Panel" parent="HUD/Root/ToggleArt/MusicTrack"]
+offset_left = 36.0
+offset_top = 3.0
+offset_right = 68.0
+offset_bottom = 35.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_knob")
+
+[node name="SfxTrack" type="Panel" parent="HUD/Root/ToggleArt"]
+offset_left = 861.0
+offset_top = 300.0
+offset_right = 932.0
+offset_bottom = 337.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_on")
+
+[node name="SfxKnob" type="Panel" parent="HUD/Root/ToggleArt/SfxTrack"]
+offset_left = 36.0
+offset_top = 3.0
+offset_right = 68.0
+offset_bottom = 35.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_knob")
+
+[node name="HintsTrack" type="Panel" parent="HUD/Root/ToggleArt"]
+offset_left = 861.0
+offset_top = 382.0
+offset_right = 932.0
+offset_bottom = 419.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
+
+[node name="HintsKnob" type="Panel" parent="HUD/Root/ToggleArt/HintsTrack"]
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 35.0
+offset_bottom = 35.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_knob")
+
+[node name="FullscreenTrack" type="Panel" parent="HUD/Root/ToggleArt"]
+offset_left = 861.0
+offset_top = 465.0
+offset_right = 932.0
+offset_bottom = 502.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
+
+[node name="FullscreenKnob" type="Panel" parent="HUD/Root/ToggleArt/FullscreenTrack"]
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 35.0
+offset_bottom = 35.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_knob")

@@ -1,7 +1,8 @@
 [gd_scene format=3 uid="uid://b4v04clr2q6pb"]
 
-[ext_resource type="Texture2D" path="res://assets/game_chocolate_bg.png" id="1_bg"]
+[ext_resource type="Texture2D" uid="uid://ctujfm8jxi0j7" path="res://assets/preparation_reference.png" id="1_bg"]
 [ext_resource type="Script" uid="uid://bb35kp1p13xqa" path="res://scripts/preparation.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://cjqiaqrh4tlnp" path="res://assets/transparent.svg" id="3_transparent"]
 
 [sub_resource type="SystemFont" id="SystemFont_portuguese"]
 font_names = PackedStringArray("Arial")
@@ -9,6 +10,41 @@ subpixel_positioning = 0
 
 [sub_resource type="Theme" id="Theme_portuguese"]
 default_font = SubResource("SystemFont_portuguese")
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hit_area"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_selected"]
+bg_color = Color(1, 1, 1, 0)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 0.82, 0.3, 0.95)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toggle_off"]
+bg_color = Color(0.35, 0.32, 0.32, 1)
+corner_radius_top_left = 15
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+corner_radius_bottom_left = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toggle_knob"]
+bg_color = Color(1, 0.95, 0.84, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_start_disabled"]
+bg_color = Color(0.4, 0.39, 0.42, 0.82)
+corner_radius_top_left = 42
+corner_radius_top_right = 42
+corner_radius_bottom_right = 42
+corner_radius_bottom_left = 42
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
 content_margin_left = 26.0
@@ -26,24 +62,12 @@ corner_radius_top_right = 16
 corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_help"]
-bg_color = Color(0.96, 0.42, 0.08, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 0.82, 0.3, 1)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-
 [node name="Preparation" type="Node2D" unique_id=1875142290]
 script = ExtResource("2_script")
 
 [node name="Background" type="Sprite2D" parent="." unique_id=1055777583]
 position = Vector2(640, 360)
-scale = Vector2(0.789, 0.789)
+scale = Vector2(0.7655, 0.7655)
 texture = ExtResource("1_bg")
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=504574192]
@@ -62,6 +86,8 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="Card" type="Panel" parent="HUD/Root/Center" unique_id=461004906]
 layout_mode = 1
@@ -76,7 +102,7 @@ offset_right = 455.0
 offset_bottom = 270.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_card")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_hit_area")
 
 [node name="Content" type="Control" parent="HUD/Root/Center/Card" unique_id=1055980566]
 layout_mode = 1
@@ -87,6 +113,7 @@ offset_right = 884.0
 offset_bottom = 520.0
 
 [node name="Title" type="Label" parent="HUD/Root/Center/Card/Content" unique_id=1465051516]
+visible = false
 layout_mode = 1
 offset_right = 858.0
 offset_bottom = 60.0
@@ -97,6 +124,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="DifficultyTitle" type="Label" parent="HUD/Root/Center/Card/Content" unique_id=2078927669]
+visible = false
 layout_mode = 1
 offset_top = 72.0
 offset_right = 858.0
@@ -111,53 +139,90 @@ layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = 150.0
-offset_top = 73.0
-offset_right = 178.0
-offset_bottom = 101.0
+offset_left = 155.0
+offset_top = 116.0
+offset_right = 193.0
+offset_bottom = 154.0
 grow_horizontal = 2
 tooltip_text = "Veja como é cada nível"
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 17
-theme_override_styles/normal = SubResource("StyleBoxFlat_help")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_help")
-theme_override_styles/hover = SubResource("StyleBoxFlat_help")
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 text = "?"
 
 [node name="DifficultyButtons" type="Control" parent="HUD/Root/Center/Card/Content" unique_id=1485493851]
 layout_mode = 1
 anchors_preset = 0
-offset_left = 2.0
-offset_top = 116.0
-offset_right = 856.0
-offset_bottom = 172.0
+offset_left = 60.0
+offset_top = 171.0
+offset_right = 800.0
+offset_bottom = 224.0
 
 [node name="EasyButton" type="Button" parent="HUD/Root/Center/Card/Content/DifficultyButtons" unique_id=870877799]
 layout_mode = 1
-offset_right = 274.0
-offset_bottom = 56.0
+offset_right = 209.0
+offset_bottom = 53.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_selected")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 toggle_mode = true
 text = "FÁCIL"
 
 [node name="NormalButton" type="Button" parent="HUD/Root/Center/Card/Content/DifficultyButtons" unique_id=1536484806]
 layout_mode = 1
-offset_left = 290.0
-offset_right = 564.0
-offset_bottom = 56.0
+offset_left = 254.0
+offset_right = 481.0
+offset_bottom = 53.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_selected")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 toggle_mode = true
 text = "NORMAL"
 
 [node name="HardButton" type="Button" parent="HUD/Root/Center/Card/Content/DifficultyButtons" unique_id=319173273]
 layout_mode = 1
-offset_left = 580.0
-offset_right = 854.0
-offset_bottom = 56.0
+offset_left = 524.0
+offset_right = 739.0
+offset_bottom = 53.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_selected")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 toggle_mode = true
 text = "DIFÍCIL"
 
 [node name="OperationTitle" type="Label" parent="HUD/Root/Center/Card/Content" unique_id=63949376]
+visible = false
 layout_mode = 1
 offset_top = 194.0
 offset_right = 858.0
@@ -170,45 +235,102 @@ horizontal_alignment = 1
 [node name="OperationButtons" type="Control" parent="HUD/Root/Center/Card/Content" unique_id=2058960985]
 layout_mode = 1
 anchors_preset = 0
-offset_left = 3.0
-offset_top = 242.0
-offset_right = 855.0
-offset_bottom = 298.0
+offset_left = 38.0
+offset_top = 302.0
+offset_right = 820.0
+offset_bottom = 360.0
 
 [node name="AdditionCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content/OperationButtons" unique_id=1240360744]
 layout_mode = 1
-offset_right = 204.0
-offset_bottom = 56.0
+offset_right = 181.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_selected")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_icons/checked = ExtResource("3_transparent")
+theme_override_icons/unchecked = ExtResource("3_transparent")
+theme_override_icons/checked_disabled = ExtResource("3_transparent")
+theme_override_icons/unchecked_disabled = ExtResource("3_transparent")
 text = "ADIÇÃO"
 
 [node name="SubtractionCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content/OperationButtons" unique_id=1293615778]
 layout_mode = 1
-offset_left = 216.0
-offset_right = 420.0
-offset_bottom = 56.0
+offset_left = 195.0
+offset_right = 383.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_selected")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_icons/checked = ExtResource("3_transparent")
+theme_override_icons/unchecked = ExtResource("3_transparent")
+theme_override_icons/checked_disabled = ExtResource("3_transparent")
+theme_override_icons/unchecked_disabled = ExtResource("3_transparent")
 text = "SUBTRAÇÃO"
 
 [node name="MultiplicationCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content/OperationButtons" unique_id=1636950293]
 layout_mode = 1
-offset_left = 432.0
-offset_right = 636.0
-offset_bottom = 56.0
+offset_left = 399.0
+offset_right = 586.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_selected")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_icons/checked = ExtResource("3_transparent")
+theme_override_icons/unchecked = ExtResource("3_transparent")
+theme_override_icons/checked_disabled = ExtResource("3_transparent")
+theme_override_icons/unchecked_disabled = ExtResource("3_transparent")
 text = "MULTIPLICAÇÃO"
 
 [node name="DivisionCheck" type="CheckButton" parent="HUD/Root/Center/Card/Content/OperationButtons" unique_id=1351561909]
 layout_mode = 1
-offset_left = 648.0
-offset_right = 852.0
-offset_bottom = 56.0
+offset_left = 600.0
+offset_right = 782.0
+offset_bottom = 58.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_selected")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_icons/checked = ExtResource("3_transparent")
+theme_override_icons/unchecked = ExtResource("3_transparent")
+theme_override_icons/checked_disabled = ExtResource("3_transparent")
+theme_override_icons/unchecked_disabled = ExtResource("3_transparent")
 text = "DIVISÃO"
 
 [node name="Status" type="Label" parent="HUD/Root/Center/Card/Content" unique_id=246627391]
+visible = false
 layout_mode = 1
-offset_top = 314.0
+offset_top = 374.0
 offset_right = 858.0
 offset_bottom = 370.0
 theme_override_colors/font_color = Color(1, 0.87, 0.62, 1)
@@ -220,26 +342,139 @@ vertical_alignment = 1
 [node name="Actions" type="Control" parent="HUD/Root/Center/Card/Content" unique_id=373111506]
 layout_mode = 1
 anchors_preset = 0
-offset_top = 394.0
-offset_right = 858.0
-offset_bottom = 456.0
+offset_left = 107.0
+offset_top = 429.0
+offset_right = 755.0
+offset_bottom = 515.0
 
 [node name="BackButton" type="Button" parent="HUD/Root/Center/Card/Content/Actions" unique_id=772335853]
 layout_mode = 1
-offset_left = 97.0
-offset_right = 417.0
-offset_bottom = 62.0
+offset_right = 282.0
+offset_bottom = 86.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 text = "VOLTAR"
 
 [node name="StartButton" type="Button" parent="HUD/Root/Center/Card/Content/Actions" unique_id=68153352]
+modulate = Color(1, 1, 1, 0)
+self_modulate = Color(1, 1, 1, 0)
 layout_mode = 1
-offset_left = 441.0
-offset_right = 761.0
-offset_bottom = 62.0
+offset_left = 334.0
+offset_right = 648.0
+offset_bottom = 86.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 disabled = true
 text = "COMEÇAR"
+
+[node name="OperationToggleArt" type="Control" parent="HUD/Root/Center" unique_id=680118934]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AdditionTrack" type="Panel" parent="HUD/Root/Center/OperationToggleArt" unique_id=300189716]
+layout_mode = 0
+offset_left = 374.0
+offset_top = 426.0
+offset_right = 420.0
+offset_bottom = 454.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
+
+[node name="AdditionKnob" type="Panel" parent="HUD/Root/Center/OperationToggleArt/AdditionTrack" unique_id=1302142931]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 25.0
+offset_bottom = 25.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_knob")
+
+[node name="SubtractionTrack" type="Panel" parent="HUD/Root/Center/OperationToggleArt" unique_id=1229117752]
+layout_mode = 0
+offset_left = 578.0
+offset_top = 426.0
+offset_right = 624.0
+offset_bottom = 454.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
+
+[node name="SubtractionKnob" type="Panel" parent="HUD/Root/Center/OperationToggleArt/SubtractionTrack" unique_id=53024487]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 25.0
+offset_bottom = 25.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_knob")
+
+[node name="MultiplicationTrack" type="Panel" parent="HUD/Root/Center/OperationToggleArt" unique_id=1499529617]
+layout_mode = 0
+offset_left = 782.0
+offset_top = 426.0
+offset_right = 828.0
+offset_bottom = 454.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
+
+[node name="MultiplicationKnob" type="Panel" parent="HUD/Root/Center/OperationToggleArt/MultiplicationTrack" unique_id=761476216]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 25.0
+offset_bottom = 25.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_knob")
+
+[node name="DivisionTrack" type="Panel" parent="HUD/Root/Center/OperationToggleArt" unique_id=1359512071]
+layout_mode = 0
+offset_left = 976.0
+offset_top = 426.0
+offset_right = 1022.0
+offset_bottom = 454.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
+
+[node name="DivisionKnob" type="Panel" parent="HUD/Root/Center/OperationToggleArt/DivisionTrack" unique_id=187318927]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 3.0
+offset_right = 25.0
+offset_bottom = 25.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_knob")
+
+[node name="StartDisabledOverlay" type="Panel" parent="HUD/Root/Center" unique_id=454932394]
+modulate = Color(0, 0, 0, 0.57254905)
+layout_mode = 0
+offset_left = 651.0
+offset_top = 537.0
+offset_right = 966.0
+offset_bottom = 628.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_start_disabled")
 
 [node name="DifficultyHelp" type="Control" parent="HUD/Root" unique_id=801904664]
 visible = false
@@ -360,5 +595,11 @@ offset_left = -160.0
 offset_top = 438.0
 offset_right = 160.0
 offset_bottom = 492.0
+grow_horizontal = 2
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 21
 text = "FECHAR"

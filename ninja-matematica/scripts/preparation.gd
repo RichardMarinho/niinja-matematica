@@ -16,6 +16,19 @@ const SETTINGS_PATH := "user://ninja_matematica.cfg"
 @onready var status_label: Label = $HUD/Root/Center/Card/Content/Status
 @onready var back_button: Button = $HUD/Root/Center/Card/Content/Actions/BackButton
 @onready var start_button: Button = $HUD/Root/Center/Card/Content/Actions/StartButton
+@onready var start_disabled_overlay: Panel = $HUD/Root/Center/StartDisabledOverlay
+@onready var operation_tracks: Array[Panel] = [
+	$HUD/Root/Center/OperationToggleArt/AdditionTrack,
+	$HUD/Root/Center/OperationToggleArt/SubtractionTrack,
+	$HUD/Root/Center/OperationToggleArt/MultiplicationTrack,
+	$HUD/Root/Center/OperationToggleArt/DivisionTrack,
+]
+@onready var operation_knobs: Array[Panel] = [
+	$HUD/Root/Center/OperationToggleArt/AdditionTrack/AdditionKnob,
+	$HUD/Root/Center/OperationToggleArt/SubtractionTrack/SubtractionKnob,
+	$HUD/Root/Center/OperationToggleArt/MultiplicationTrack/MultiplicationKnob,
+	$HUD/Root/Center/OperationToggleArt/DivisionTrack/DivisionKnob,
+]
 
 var selected_difficulty := ""
 var selected_operations: Array[String] = []
@@ -36,6 +49,7 @@ func _ready() -> void:
 	start_button.pressed.connect(_start_game)
 	help_button.pressed.connect(_open_difficulty_help)
 	help_close_button.pressed.connect(_close_difficulty_help)
+	_sync_operation_switch_art()
 	_refresh_start_button()
 
 
@@ -74,12 +88,30 @@ func _operation_toggled(checked: bool, operation: String) -> void:
 	elif not checked:
 		selected_operations.erase(operation)
 	AudioManager.play_ui()
+	_sync_operation_switch_art()
 	_refresh_start_button()
+
+
+func _sync_operation_switch_art() -> void:
+	var states := [
+		addition_check.button_pressed,
+		subtraction_check.button_pressed,
+		multiplication_check.button_pressed,
+		division_check.button_pressed,
+	]
+	for index in range(states.size()):
+		var enabled: bool = states[index]
+		var track := StyleBoxFlat.new()
+		track.bg_color = Color("#f32678") if enabled else Color("#595455")
+		track.set_corner_radius_all(15)
+		operation_tracks[index].add_theme_stylebox_override("panel", track)
+		operation_knobs[index].position.x = 21.0 if enabled else 3.0
 
 
 func _refresh_start_button() -> void:
 	var can_start := not selected_difficulty.is_empty() and not selected_operations.is_empty()
 	start_button.disabled = not can_start
+	start_disabled_overlay.visible = start_button.disabled
 	if can_start:
 		status_label.text = "Pronto! %s · %d operação(ões) selecionada(s)." % [_difficulty_name(selected_difficulty), selected_operations.size()]
 	else:

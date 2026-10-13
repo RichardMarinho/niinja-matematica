@@ -1,21 +1,21 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://dewo6js5cknwo"]
 
-[ext_resource type="Texture2D" path="res://assets/menu_documeros.png" id="1_bg"]
-[ext_resource type="Script" path="res://scripts/menu.gd" id="2_script"]
+[ext_resource type="Texture2D" uid="uid://cffiidhyayemx" path="res://assets/menu_reference.png" id="1_bg"]
+[ext_resource type="Script" uid="uid://ccqhdj05vyuff" path="res://scripts/menu.gd" id="2_script"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hit_area"]
 
-[node name="Menu" type="Node2D"]
+[node name="Menu" type="Node2D" unique_id=2092906619]
 script = ExtResource("2_script")
 
-[node name="Background" type="Sprite2D" parent="."]
+[node name="Background" type="Sprite2D" parent="." unique_id=1600431814]
 position = Vector2(640, 360)
-texture = ExtResource("1_bg")
 scale = Vector2(0.7655, 0.7655)
+texture = ExtResource("1_bg")
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1635934497]
 
-[node name="Root" type="Control" parent="HUD"]
+[node name="Root" type="Control" parent="HUD" unique_id=1437746465]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -24,7 +24,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 1
 
-[node name="PlayButton" type="Button" parent="HUD/Root"]
+[node name="PlayButton" type="Button" parent="HUD/Root" unique_id=64992617]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -32,35 +32,37 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -162.0
-offset_top = -16.0
-offset_right = 179.0
-offset_bottom = 74.0
+offset_top = 28.0
+offset_right = 173.0
+offset_bottom = 122.0
+grow_horizontal = 2
+grow_vertical = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
-text = ""
 
-[node name="OptionsButton" type="Button" parent="HUD/Root"]
+[node name="OptionsButton" type="Button" parent="HUD/Root" unique_id=879650428]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -156.0
-offset_top = 92.0
-offset_right = 173.0
-offset_bottom = 172.0
+offset_left = -154.0
+offset_top = 132.0
+offset_right = 159.0
+offset_bottom = 203.0
+grow_horizontal = 2
+grow_vertical = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
-text = ""
 
-[node name="QuitButton" type="Button" parent="HUD/Root"]
+[node name="QuitButton" type="Button" parent="HUD/Root" unique_id=626879949]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -68,12 +70,15 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -152.0
-offset_top = 191.0
-offset_right = 167.0
-offset_bottom = 268.0
+offset_top = 216.0
+offset_right = 150.0
+offset_bottom = 293.0
+grow_horizontal = 2
+grow_vertical = 2
 focus_mode = 0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
-text = ""
+
+[connection signal="draw" from="Background" to="." method="_on_background_draw"]
