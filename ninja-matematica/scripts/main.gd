@@ -76,7 +76,9 @@ const DIFFICULTIES := {
 	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenTrack/FullscreenKnob,
 ]
 @onready var game_over_overlay: Control = $HUD/Root/GameOverOverlay
-@onready var game_over_details: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/Details
+@onready var game_over_score: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/ScoreValue
+@onready var game_over_correct: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/CorrectValue
+@onready var game_over_attempts: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/AttemptsValue
 @onready var retry_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/RetryButton
 @onready var game_over_exit_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/ExitButton
 
@@ -100,6 +102,7 @@ var local_mode := true
 var api_token := ""
 var attempts := 0
 var correct_attempts := 0
+var consecutive_wrong_answers := 0
 var pending_attempt: Dictionary = {}
 var retry_clock := 0.0
 var feedback_tween: Tween
@@ -108,6 +111,7 @@ var feedback_tween: Tween
 func _ready() -> void:
 	if not SceneFlow.enter_scene_from_menu():
 		return
+	_apply_gameplay_number_font()
 	api.request_completed.connect(_on_api_request_completed)
 	pause_button.pressed.connect(_open_pause)
 	resume_button.pressed.connect(_resume_game)
@@ -152,6 +156,10 @@ func _ready() -> void:
 	hints_check.toggled.connect(_pause_option_toggled.bind("hints"))
 	fullscreen_check.toggled.connect(_pause_option_toggled.bind("fullscreen"))
 	pause_overlay.visible = false
+	pause_menu.visible = true
+	pause_options.visible = false
+	pause_art.visible = true
+	pause_options_art.visible = false
 	game_over_overlay.visible = false
 	round_seconds = float(difficulty.seconds)
 	spawn_interval = float(difficulty.spawn)
@@ -183,11 +191,18 @@ func start_round() -> void:
 	spawn_clock = 0.0
 	attempts = 0
 	correct_attempts = 0
+	consecutive_wrong_answers = 0
 	game_running = true
 	request_pending = false
 	_update_score()
 	_update_timer()
 	_request_next_question()
+
+
+func _apply_gameplay_number_font() -> void:
+	var gameplay_number_font: Font = ThemeDB.fallback_font
+	for value_label in [game_over_score, game_over_correct, game_over_attempts]:
+		value_label.add_theme_font_override("font", gameplay_number_font)
 
 
 func _process(delta: float) -> void:
@@ -506,12 +521,15 @@ func _windows_1252_codepoint(byte: int) -> int:
 func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) -> void:
 	request_pending = false
 	if is_correct:
+		consecutive_wrong_answers = 0
 		_flash_feedback(Color(0.12, 1.0, 0.24, 1.0))
+		AudioManager.play_correct()
 		combo += 1
 		correct_attempts += 1
 		score += 10 + mini(combo, 10) * 2
 		hint_label.text = "ACERTO! Próxima conta chegando…"
 	else:
+		consecutive_wrong_answers += 1
 		_flash_feedback(Color(1.0, 0.12, 0.1, 1.0))
 		combo = 0
 		AudioManager.play_mistake()
@@ -521,6 +539,10 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 	_update_score()
 	_update_timer()
 	if game_running and is_correct:
+		_request_next_question()
+	elif game_running and consecutive_wrong_answers >= 3:
+		consecutive_wrong_answers = 0
+		hint_label.text = "Vamos trocar de conta!"
 		_request_next_question()
 
 
@@ -580,7 +602,9 @@ func _end_round() -> void:
 		config.save("user://ninja_matematica.cfg")
 	_update_record()
 	pause_button.visible = false
-	game_over_details.text = "PONTOS: %d   ·   ACERTOS: %d   ·   TENTATIVAS: %d" % [score, correct_attempts, attempts]
+	game_over_score.text = str(score)
+	game_over_correct.text = str(correct_attempts)
+	game_over_attempts.text = str(attempts)
 	game_over_overlay.visible = true
 	hint_label.text = "FIM DE JOGO"
 
@@ -590,6 +614,8 @@ func _open_pause() -> void:
 		return
 	pause_menu.visible = true
 	pause_options.visible = false
+	pause_art.visible = true
+	pause_options_art.visible = false
 	pause_overlay.visible = true
 	pointer_down = false
 	get_tree().paused = true

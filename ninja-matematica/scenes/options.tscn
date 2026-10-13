@@ -2,7 +2,7 @@
 
 [ext_resource type="Texture2D" path="res://assets/game_chocolate_bg.png" id="1_bg"]
 [ext_resource type="Script" path="res://scripts/options.gd" id="2_script"]
-[ext_resource type="Texture2D" path="res://assets/options_reference.png" id="3_reference"]
+[ext_resource type="Texture2D" path="res://assets/options_reference_v2.png" id="3_reference"]
 [ext_resource type="Texture2D" path="res://assets/transparent.svg" id="4_transparent"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
@@ -138,9 +138,9 @@ anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
 offset_left = -40.0
-offset_top = 76.0
+offset_top = 70.0
 offset_right = 601.0
-offset_bottom = 151.0
+offset_bottom = 145.0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
@@ -165,9 +165,9 @@ anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
 offset_left = -40.0
-offset_top = 158.0
+offset_top = 151.0
 offset_right = 601.0
-offset_bottom = 233.0
+offset_bottom = 226.0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
@@ -192,9 +192,9 @@ anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
 offset_left = -40.0
-offset_top = 240.0
+offset_top = 231.0
 offset_right = 601.0
-offset_bottom = 315.0
+offset_bottom = 306.0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
@@ -219,9 +219,9 @@ anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
 offset_left = -40.0
-offset_top = 321.0
+offset_top = 312.0
 offset_right = 601.0
-offset_bottom = 396.0
+offset_bottom = 387.0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
@@ -245,10 +245,10 @@ anchor_left = 0
 anchor_top = 0
 anchor_right = 0
 anchor_bottom = 0
-offset_left = 96.0
-offset_top = 412.0
-offset_right = 464.0
-offset_bottom = 493.0
+offset_left = 128.0
+offset_top = 404.0
+offset_right = 445.0
+offset_bottom = 489.0
 theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
 theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
@@ -270,10 +270,10 @@ anchor_bottom = 1.0
 mouse_filter = 2
 
 [node name="MusicTrack" type="Panel" parent="HUD/Root/ToggleArt"]
-offset_left = 861.0
-offset_top = 218.0
-offset_right = 932.0
-offset_bottom = 255.0
+offset_left = 872.0
+offset_top = 211.0
+offset_right = 943.0
+offset_bottom = 248.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_on")
 
@@ -286,10 +286,10 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_knob")
 
 [node name="SfxTrack" type="Panel" parent="HUD/Root/ToggleArt"]
-offset_left = 861.0
-offset_top = 300.0
-offset_right = 932.0
-offset_bottom = 337.0
+offset_left = 872.0
+offset_top = 293.0
+offset_right = 943.0
+offset_bottom = 330.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_on")
 
@@ -302,10 +302,10 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_knob")
 
 [node name="HintsTrack" type="Panel" parent="HUD/Root/ToggleArt"]
-offset_left = 861.0
-offset_top = 382.0
-offset_right = 932.0
-offset_bottom = 419.0
+offset_left = 872.0
+offset_top = 375.0
+offset_right = 943.0
+offset_bottom = 412.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
 
@@ -318,10 +318,10 @@ mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_knob")
 
 [node name="FullscreenTrack" type="Panel" parent="HUD/Root/ToggleArt"]
-offset_left = 861.0
-offset_top = 465.0
-offset_right = 932.0
-offset_bottom = 502.0
+offset_left = 872.0
+offset_top = 457.0
+offset_right = 943.0
+offset_bottom = 494.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
 

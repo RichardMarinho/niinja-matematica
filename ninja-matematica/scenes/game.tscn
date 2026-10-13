@@ -1,22 +1,17 @@
 [gd_scene format=3 uid="uid://hp2iga7hx46j"]
 
-[ext_resource type="Texture2D" path="res://assets/game_chocolate_bg.png" id="1_bg"]
+[ext_resource type="Texture2D" uid="uid://cqi0tmuqgghsv" path="res://assets/game_chocolate_bg.png" id="1_bg"]
 [ext_resource type="Script" uid="uid://cx18x3euib63f" path="res://scripts/main.gd" id="2_main"]
 [ext_resource type="PackedScene" path="res://scenes/candy.tscn" id="3_candy"]
-[ext_resource type="Shader" path="res://shaders/screen_feedback.gdshader" id="4_flash_shader"]
-[ext_resource type="Texture2D" path="res://assets/icon_timer.svg" id="5_timer_icon"]
-[ext_resource type="Texture2D" path="res://assets/icon_crown.svg" id="6_crown_icon"]
-[ext_resource type="Texture2D" path="res://assets/icon_star.svg" id="7_star_icon"]
-[ext_resource type="Texture2D" path="res://assets/equation_ornaments.svg" id="8_equation_ornaments"]
-[ext_resource type="Texture2D" path="res://assets/pause_card_reference.png" id="9_pause_reference"]
-[ext_resource type="Texture2D" path="res://assets/options_reference.png" id="10_options_reference"]
-[ext_resource type="Texture2D" path="res://assets/transparent.svg" id="11_transparent"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_feedback"]
-shader = ExtResource("4_flash_shader")
-shader_parameter/flash_color = Color(0.1, 1, 0.2, 1)
-shader_parameter/strength = 0.0
-shader_parameter/edge_width = 0.18
+[ext_resource type="Shader" uid="uid://cg73rxcyt5fbj" path="res://shaders/screen_feedback.gdshader" id="4_flash_shader"]
+[ext_resource type="Texture2D" uid="uid://pnjh7q18mod6" path="res://assets/icon_timer.svg" id="5_timer_icon"]
+[ext_resource type="Texture2D" uid="uid://b7k1ihpk6ugbx" path="res://assets/icon_crown.svg" id="6_crown_icon"]
+[ext_resource type="Texture2D" uid="uid://c07jpgbbs3u5j" path="res://assets/icon_star.svg" id="7_star_icon"]
+[ext_resource type="Texture2D" uid="uid://b4rpjhneuneau" path="res://assets/equation_ornaments.svg" id="8_equation_ornaments"]
+[ext_resource type="Texture2D" uid="uid://bh7y5td4omqge" path="res://assets/pause_card_reference.png" id="9_pause_reference"]
+[ext_resource type="Texture2D" path="res://assets/options_reference_v2.png" id="10_options_reference"]
+[ext_resource type="Texture2D" uid="uid://cjqiaqrh4tlnp" path="res://assets/transparent.svg" id="11_transparent"]
+[ext_resource type="Texture2D" uid="uid://chjjmp0tvc11i" path="res://assets/game_over_reference.png" id="12_game_over"]
 
 [sub_resource type="SystemFont" id="SystemFont_portuguese"]
 font_names = PackedStringArray("Arial")
@@ -52,17 +47,16 @@ corner_radius_bottom_left = 18
 shadow_color = Color(0, 0, 0, 0.4)
 shadow_size = 9
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_feedback"]
+shader = ExtResource("4_flash_shader")
+shader_parameter/flash_color = Color(0.1, 1, 0.2, 1)
+shader_parameter/strength = 0.0
+shader_parameter/edge_width = 0.18
+
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hit_area"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toggle_on"]
 bg_color = Color(0.95, 0.12, 0.45, 1)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toggle_off"]
-bg_color = Color(0.33, 0.31, 0.32, 1)
 corner_radius_top_left = 18
 corner_radius_top_right = 18
 corner_radius_bottom_right = 18
@@ -74,6 +68,13 @@ corner_radius_top_left = 16
 corner_radius_top_right = 16
 corner_radius_bottom_right = 16
 corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toggle_off"]
+bg_color = Color(0.33, 0.31, 0.32, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
 
 [node name="Main" type="Node2D" unique_id=1268758330]
 script = ExtResource("2_main")
@@ -152,28 +153,32 @@ mouse_filter = 2
 
 [node name="TimerCard" type="Panel" parent="HUD/Root/TopBar" unique_id=782196841]
 layout_mode = 1
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -212.0
 offset_top = 12.0
 offset_right = -18.0
 offset_bottom = 58.0
+grow_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Timer" type="Label" parent="HUD/Root/TopBar/TimerCard" unique_id=1057829860]
 layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 43.0
 offset_right = -7.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(1, 0.92, 0.75, 1)
 theme_override_font_sizes/font_size = 18
 text = "TEMPO: 59"
-horizontal_alignment = 0
 vertical_alignment = 1
 
-[node name="TimerIcon" type="TextureRect" parent="HUD/Root/TopBar/TimerCard"]
+[node name="TimerIcon" type="TextureRect" parent="HUD/Root/TopBar/TimerCard" unique_id=2128472103]
 layout_mode = 1
 offset_left = 11.0
 offset_top = 9.0
@@ -186,28 +191,32 @@ stretch_mode = 5
 
 [node name="RecordCard" type="Panel" parent="HUD/Root/TopBar" unique_id=2076499883]
 layout_mode = 1
+anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -212.0
 offset_top = 64.0
 offset_right = -18.0
 offset_bottom = 110.0
+grow_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Record" type="Label" parent="HUD/Root/TopBar/RecordCard" unique_id=1265182618]
 layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 43.0
 offset_right = -7.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(1, 0.88, 0.66, 1)
 theme_override_font_sizes/font_size = 18
 text = "RECORDE: 0"
-horizontal_alignment = 0
 vertical_alignment = 1
 
-[node name="CrownIcon" type="TextureRect" parent="HUD/Root/TopBar/RecordCard"]
+[node name="CrownIcon" type="TextureRect" parent="HUD/Root/TopBar/RecordCard" unique_id=1852526047]
 layout_mode = 1
 offset_left = 10.0
 offset_top = 9.0
@@ -227,22 +236,25 @@ offset_left = -212.0
 offset_top = 116.0
 offset_right = -18.0
 offset_bottom = 162.0
+grow_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="Score" type="Label" parent="HUD/Root/TopBar/ScoreCard" unique_id=1686651468]
 layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 43.0
 offset_right = -7.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.38, 1)
 theme_override_font_sizes/font_size = 19
 text = "PONTOS: 0"
-horizontal_alignment = 0
 vertical_alignment = 1
 
-[node name="StarIcon" type="TextureRect" parent="HUD/Root/TopBar/ScoreCard"]
+[node name="StarIcon" type="TextureRect" parent="HUD/Root/TopBar/ScoreCard" unique_id=357634173]
 layout_mode = 1
 offset_left = 10.0
 offset_top = 9.0
@@ -254,21 +266,18 @@ expand_mode = 1
 stretch_mode = 5
 
 [node name="EquationCard" type="Panel" parent="HUD/Root" unique_id=729544868]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
+layout_mode = 1
+anchors_preset = 10
 anchor_right = 1.0
-anchor_bottom = 0.0
 offset_left = 320.0
 offset_top = 86.0
 offset_right = -320.0
 offset_bottom = 166.0
-layout_mode = 1
 grow_horizontal = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="EquationOrnaments" type="TextureRect" parent="HUD/Root/EquationCard"]
+[node name="EquationOrnaments" type="TextureRect" parent="HUD/Root/EquationCard" unique_id=1343092377]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -294,16 +303,11 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Hint" type="Label" parent="HUD/Root" unique_id=678775094]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 1.0
-anchor_bottom = 0.0
-offset_left = 0.0
-offset_top = 172.0
-offset_right = 0.0
-offset_bottom = 202.0
 layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 172.0
+offset_bottom = 202.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(1, 0.9, 0.67, 1)
 theme_override_font_sizes/font_size = 17
@@ -311,7 +315,8 @@ text = "Acerte um doce com o martelo!"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="FeedbackFlash" type="ColorRect" parent="HUD/Root"]
+[node name="FeedbackFlash" type="ColorRect" parent="HUD/Root" unique_id=14909733]
+material = SubResource("ShaderMaterial_feedback")
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -319,7 +324,6 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-material = SubResource("ShaderMaterial_feedback")
 
 [node name="PauseOverlay" type="Control" parent="HUD/Root" unique_id=458630540]
 process_mode = 3
@@ -342,11 +346,13 @@ color = Color(0, 0, 0, 0.68)
 
 [node name="Center" type="Control" parent="HUD/Root/PauseOverlay" unique_id=441048839]
 layout_mode = 1
-anchors_preset = 0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="PauseArt" type="TextureRect" parent="HUD/Root/PauseOverlay/Center"]
+[node name="PauseArt" type="TextureRect" parent="HUD/Root/PauseOverlay/Center" unique_id=1431814585]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -357,12 +363,14 @@ offset_left = -395.0
 offset_top = -327.0
 offset_right = 395.0
 offset_bottom = 327.0
+grow_horizontal = 2
+grow_vertical = 2
 mouse_filter = 2
 texture = ExtResource("9_pause_reference")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="PauseOptionsArt" type="TextureRect" parent="HUD/Root/PauseOverlay/Center"]
+[node name="PauseOptionsArt" type="TextureRect" parent="HUD/Root/PauseOverlay/Center" unique_id=438533568]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -377,6 +385,7 @@ stretch_mode = 5
 
 [node name="PauseCard" type="Panel" parent="HUD/Root/PauseOverlay/Center" unique_id=1935443146]
 layout_mode = 1
+anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -385,32 +394,21 @@ offset_left = -395.0
 offset_top = -327.0
 offset_right = 395.0
 offset_bottom = 327.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxEmpty_hit_area")
 
 [node name="Content" type="Control" parent="HUD/Root/PauseOverlay/Center/PauseCard" unique_id=1302333734]
 layout_mode = 1
 anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 0.0
-offset_top = 0.0
 offset_right = 790.0
 offset_bottom = 654.0
 
 [node name="Title" type="Label" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content" unique_id=1251770175]
 visible = false
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 0.0
-offset_top = 0.0
+layout_mode = 1
 offset_right = 438.0
 offset_bottom = 62.0
-layout_mode = 1
 theme_override_colors/font_color = Color(1, 0.82, 0.3, 1)
 theme_override_font_sizes/font_size = 34
 text = "PAUSADO"
@@ -420,239 +418,189 @@ vertical_alignment = 1
 [node name="PauseMenu" type="Control" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content" unique_id=2047111111]
 layout_mode = 1
 anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 0.0
-offset_top = 0.0
 offset_right = 790.0
 offset_bottom = 654.0
 
 [node name="ResumeButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu" unique_id=969026927]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
+layout_mode = 1
 offset_left = 180.0
 offset_top = 242.0
 offset_right = 610.0
 offset_bottom = 343.0
-layout_mode = 1
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 theme_override_colors/font_color = Color(1, 1, 1, 0)
-theme_override_font_sizes/font_size = 23
-text = "CONTINUAR"
-theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
 theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+text = "CONTINUAR"
 
 [node name="OptionsButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu" unique_id=148866861]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
+layout_mode = 1
 offset_left = 183.0
 offset_top = 353.0
 offset_right = 610.0
 offset_bottom = 454.0
-layout_mode = 1
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 theme_override_colors/font_color = Color(1, 1, 1, 0)
-theme_override_font_sizes/font_size = 23
-text = "OPÇÕES"
-theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
 theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+text = "OPÇÕES"
 
 [node name="ExitButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu" unique_id=1359486005]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
+layout_mode = 1
 offset_left = 176.0
 offset_top = 461.0
 offset_right = 619.0
 offset_bottom = 572.0
-layout_mode = 1
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 theme_override_colors/font_color = Color(1, 1, 1, 0)
-theme_override_font_sizes/font_size = 23
-text = "SAIR PARA O MENU"
-theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
 theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 23
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+text = "SAIR PARA O MENU"
 
 [node name="PauseOptions" type="Control" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content" unique_id=890488488]
+visible = false
 layout_mode = 1
 anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 0.0
-offset_top = 0.0
 offset_right = 790.0
 offset_bottom = 654.0
-visible = false
 
 [node name="MusicCheck" type="CheckButton" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=133343641]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 73.0
-offset_top = 167.0
-offset_right = 714.0
-offset_bottom = 242.0
-layout_mode = 1
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
-theme_override_colors/font_color = Color(1, 1, 1, 0)
 modulate = Color(1, 1, 1, 0)
-theme_override_icons/checked = ExtResource("11_transparent")
-theme_override_icons/unchecked = ExtResource("11_transparent")
-theme_override_font_sizes/font_size = 19
-text = "Música"
-theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+layout_mode = 1
+offset_left = 73.0
+offset_top = 161.0
+offset_right = 714.0
+offset_bottom = 236.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
 theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_icons/checked = ExtResource("11_transparent")
+theme_override_icons/unchecked = ExtResource("11_transparent")
+text = "Música"
 
 [node name="SfxCheck" type="CheckButton" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=971305091]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 73.0
-offset_top = 249.0
-offset_right = 714.0
-offset_bottom = 324.0
-layout_mode = 1
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
-theme_override_colors/font_color = Color(1, 1, 1, 0)
 modulate = Color(1, 1, 1, 0)
-theme_override_icons/checked = ExtResource("11_transparent")
-theme_override_icons/unchecked = ExtResource("11_transparent")
-theme_override_font_sizes/font_size = 19
-text = "Efeitos sonoros"
-theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+layout_mode = 1
+offset_left = 73.0
+offset_top = 243.0
+offset_right = 714.0
+offset_bottom = 318.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
 theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_icons/checked = ExtResource("11_transparent")
+theme_override_icons/unchecked = ExtResource("11_transparent")
+text = "Efeitos sonoros"
 
 [node name="HintsCheck" type="CheckButton" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=287798508]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 73.0
-offset_top = 331.0
-offset_right = 714.0
-offset_bottom = 406.0
-layout_mode = 1
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
-theme_override_colors/font_color = Color(1, 1, 1, 0)
 modulate = Color(1, 1, 1, 0)
-theme_override_icons/checked = ExtResource("11_transparent")
-theme_override_icons/unchecked = ExtResource("11_transparent")
-theme_override_font_sizes/font_size = 19
-text = "Dicas"
-theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+layout_mode = 1
+offset_left = 73.0
+offset_top = 322.0
+offset_right = 714.0
+offset_bottom = 397.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
 theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+theme_override_icons/checked = ExtResource("11_transparent")
+theme_override_icons/unchecked = ExtResource("11_transparent")
+text = "Dicas"
 
 [node name="FullscreenCheck" type="CheckButton" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=1352292233]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 73.0
-offset_top = 412.0
-offset_right = 714.0
-offset_bottom = 487.0
-layout_mode = 1
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
-theme_override_colors/font_color = Color(1, 1, 1, 0)
 modulate = Color(1, 1, 1, 0)
+layout_mode = 1
+offset_left = 73.0
+offset_top = 402.0
+offset_right = 714.0
+offset_bottom = 477.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
+theme_override_font_sizes/font_size = 19
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 theme_override_icons/checked = ExtResource("11_transparent")
 theme_override_icons/unchecked = ExtResource("11_transparent")
-theme_override_font_sizes/font_size = 19
 text = "Tela cheia"
-theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
-theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
-theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
-theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 
 [node name="BackButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=1391461655]
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 209.0
-offset_top = 503.0
-offset_right = 577.0
-offset_bottom = 584.0
 layout_mode = 1
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+offset_left = 241.0
+offset_top = 496.0
+offset_right = 558.0
+offset_bottom = 579.0
 theme_override_colors/font_color = Color(1, 1, 1, 0)
-theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
-theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
 theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 
-[node name="MusicTrack" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions"]
-offset_left = 616.0
-offset_top = 185.0
-offset_right = 687.0
-offset_bottom = 222.0
+[node name="MusicTrack" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=612459406]
+layout_mode = 0
+offset_left = 627.0
+offset_top = 178.0
+offset_right = 698.0
+offset_bottom = 215.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_on")
 
-[node name="MusicKnob" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/MusicTrack"]
+[node name="MusicKnob" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/MusicTrack" unique_id=194173373]
+layout_mode = 0
 offset_left = 36.0
 offset_top = 3.0
 offset_right = 68.0
@@ -660,15 +608,17 @@ offset_bottom = 34.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_knob")
 
-[node name="SfxTrack" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions"]
-offset_left = 616.0
-offset_top = 267.0
-offset_right = 687.0
-offset_bottom = 304.0
+[node name="SfxTrack" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=1858664612]
+layout_mode = 0
+offset_left = 627.0
+offset_top = 260.0
+offset_right = 698.0
+offset_bottom = 297.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_on")
 
-[node name="SfxKnob" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/SfxTrack"]
+[node name="SfxKnob" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/SfxTrack" unique_id=624917179]
+layout_mode = 0
 offset_left = 36.0
 offset_top = 3.0
 offset_right = 68.0
@@ -676,15 +626,17 @@ offset_bottom = 34.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_knob")
 
-[node name="HintsTrack" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions"]
-offset_left = 616.0
-offset_top = 349.0
-offset_right = 687.0
-offset_bottom = 386.0
+[node name="HintsTrack" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=420885042]
+layout_mode = 0
+offset_left = 627.0
+offset_top = 342.0
+offset_right = 698.0
+offset_bottom = 379.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
 
-[node name="HintsKnob" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/HintsTrack"]
+[node name="HintsKnob" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/HintsTrack" unique_id=1375200887]
+layout_mode = 0
 offset_left = 3.0
 offset_top = 3.0
 offset_right = 35.0
@@ -692,27 +644,26 @@ offset_bottom = 34.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_knob")
 
-[node name="FullscreenTrack" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions"]
-offset_left = 616.0
-offset_top = 432.0
-offset_right = 687.0
-offset_bottom = 469.0
+[node name="FullscreenTrack" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions" unique_id=483444930]
+layout_mode = 0
+offset_left = 627.0
+offset_top = 423.0
+offset_right = 698.0
+offset_bottom = 460.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_off")
 
-[node name="FullscreenKnob" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenTrack"]
+[node name="FullscreenKnob" type="Panel" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenTrack" unique_id=1055455479]
+layout_mode = 0
 offset_left = 3.0
 offset_top = 3.0
 offset_right = 35.0
 offset_bottom = 34.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_knob")
-theme_override_font_sizes/font_size = 20
-text = "VOLTAR"
 
 [node name="GameOverOverlay" type="Control" parent="HUD/Root" unique_id=241512329]
 process_mode = 3
-visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -731,72 +682,119 @@ color = Color(0, 0, 0, 0.72)
 
 [node name="Center" type="Control" parent="HUD/Root/GameOverOverlay" unique_id=213099900]
 layout_mode = 1
-anchors_preset = 0
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="GameOverCard" type="Panel" parent="HUD/Root/GameOverOverlay/Center" unique_id=1572993525]
 layout_mode = 1
+anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -190.0
-offset_right = 280.0
-offset_bottom = 190.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+offset_left = -640.0
+offset_top = -350.0
+offset_right = 640.0
+offset_bottom = 350.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_hit_area")
+
+[node name="GameOverArt" type="TextureRect" parent="HUD/Root/GameOverOverlay/Center/GameOverCard" unique_id=1959214367]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("12_game_over")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="Content" type="Control" parent="HUD/Root/GameOverOverlay/Center/GameOverCard" unique_id=1122971597]
 layout_mode = 1
-anchors_preset = 0
-anchor_left = 0.0
-anchor_top = 0.0
-anchor_right = 0.0
-anchor_bottom = 0.0
-offset_left = 28.0
-offset_top = 24.0
-offset_right = 532.0
-offset_bottom = 356.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Title" type="Label" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=1704499750]
+[node name="ScoreValue" type="Label" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=2013819019]
 layout_mode = 1
-offset_right = 504.0
-offset_bottom = 70.0
-theme_override_colors/font_color = Color(1, 0.42, 0.24, 1)
-theme_override_font_sizes/font_size = 42
-text = "VOCÊ PERDEU!"
+offset_left = 398.0
+offset_top = 282.0
+offset_right = 488.0
+offset_bottom = 342.0
+pivot_offset = Vector2(45, 30)
+theme_override_colors/font_color = Color(1, 0.68, 0.02, 1)
+theme_override_colors/font_outline_color = Color(0.29, 0.09, 0.015, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 38
+text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Details" type="Label" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=2116777112]
+[node name="CorrectValue" type="Label" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=106258822]
 layout_mode = 1
-offset_top = 90.0
-offset_right = 504.0
-offset_bottom = 144.0
-theme_override_colors/font_color = Color(1, 0.92, 0.75, 1)
-theme_override_font_sizes/font_size = 19
-text = "PONTOS: 0   |   ACERTOS: 0"
+offset_left = 688.0
+offset_top = 281.0
+offset_right = 763.0
+offset_bottom = 341.0
+theme_override_colors/font_color = Color(1, 0.68, 0.02, 1)
+theme_override_colors/font_outline_color = Color(0.29, 0.09, 0.015, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 38
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AttemptsValue" type="Label" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=1409688944]
+layout_mode = 1
+offset_left = 992.0
+offset_top = 282.0
+offset_right = 1062.0
+offset_bottom = 342.0
+theme_override_colors/font_color = Color(1, 0.68, 0.02, 1)
+theme_override_colors/font_outline_color = Color(0.29, 0.09, 0.015, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 34
+text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="RetryButton" type="Button" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=1379399717]
 layout_mode = 1
-offset_left = 62.0
-offset_top = 176.0
-offset_right = 442.0
-offset_bottom = 234.0
-theme_override_font_sizes/font_size = 23
-text = "TENTAR NOVAMENTE"
+offset_left = 323.0
+offset_top = 369.0
+offset_right = 964.0
+offset_bottom = 470.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 
 [node name="ExitButton" type="Button" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=536348199]
 layout_mode = 1
-offset_left = 62.0
-offset_top = 248.0
-offset_right = 442.0
-offset_bottom = 302.0
-theme_override_font_sizes/font_size = 22
-text = "SAIR PARA O MENU"
+offset_left = 322.0
+offset_top = 486.0
+offset_right = 962.0
+offset_bottom = 578.0
+theme_override_colors/font_color = Color(1, 1, 1, 0)
+theme_override_colors/font_focus_color = Color(1, 1, 1, 0)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 0)
+theme_override_colors/font_hover_color = Color(1, 1, 1, 0)
+theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 
 [node name="API" type="HTTPRequest" parent="." unique_id=617210625]
 timeout = 12.0
