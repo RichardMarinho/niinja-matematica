@@ -107,9 +107,16 @@ func _ready() -> void:
 	pause_options_back_button.pressed.connect(_show_pause_menu)
 	retry_button.pressed.connect(_retry_round)
 	game_over_exit_button.pressed.connect(_exit_to_menu)
-	api_token = OS.get_environment("GAUSS_API_TOKEN").strip_edges()
+	var configured_url := ""
+	if OS.has_feature("web"):
+		# In the site iframe, reuse the student's existing session without putting
+		# the token in the game URL or asking the student to sign in again.
+		api_token = str(JavaScriptBridge.eval("localStorage.getItem('gauss.student.session') || ''")).strip_edges()
+		configured_url = str(JavaScriptBridge.eval("(window.parent && window.parent.__GAUSS_API_URL__) || ''")).strip_edges()
+	else:
+		api_token = OS.get_environment("GAUSS_API_TOKEN").strip_edges()
+		configured_url = OS.get_environment("GAUSS_API_URL").strip_edges()
 	local_mode = api_token.is_empty()
-	var configured_url := OS.get_environment("GAUSS_API_URL").strip_edges()
 	if not configured_url.is_empty():
 		api_base_url = configured_url.trim_suffix("/")
 	var config := ConfigFile.new()
