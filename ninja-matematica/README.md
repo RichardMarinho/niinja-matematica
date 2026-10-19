@@ -10,4 +10,4 @@ Fácil dura 75 segundos, usa contas menores e doces mais lentos, e tira pouco te
 
 ## API Project Gauss
 
-Sem token, o jogo usa perguntas locais. Para enviar tentativas, defina `GAUSS_API_URL` (por exemplo, `http://127.0.0.1:3001`) e `GAUSS_API_TOKEN` antes de abrir o jogo. A API continua identificando o jogo como `ninja-matematica` para manter a compatibilidade com sessões já configuradas. O recorde e a duração da partida continuam salvos localmente porque a API não oferece um endpoint de sessão para esses dados.
+Com `GAUSS_API_URL` (por exemplo, `http://127.0.0.1:3001`) e `GAUSS_API_TOKEN` de aluno definidos, as contas sao carregadas e as tentativas validadas pela API. Sem token, a partida funciona offline e usa geracao local com os mesmos conjuntos e faixas de dificuldade definidos em `project-gauss-api/src/learning/free-practice.ts`; essas tentativas nao sao sincronizadas. A API continua identificando o jogo como `ninja-matematica`. A dificuldade seleciona um conjunto por operacao e avanca conforme a pontuacao. O recorde e a duracao da partida continuam salvos localmente porque a API nao oferece um endpoint de sessao para esses dados.

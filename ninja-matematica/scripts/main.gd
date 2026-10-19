@@ -11,32 +11,19 @@ extends Node2D
 @export var game_id := "ninja-matematica"
 @export var api_base_url := "http://127.0.0.1:3001"
 
-const PRACTICE_TIERS := {
-	"easy": {
-		"addition": ["add_1_3", "add_1_5", "add_over_10"],
-		"subtraction": ["sub_0_5", "sub_0_10", "sub_0_20_easy"],
-		"multiplication": ["mul_missing_2_3", "mul_missing_4_5", "mul_0_10"],
-		"division": ["div_missing_1_10", "div_1_5", "div_1_10"],
-	},
-	"normal": {
-		"addition": ["add_2_digits", "add_over_1000", "add_over_1000"],
-		"subtraction": ["sub_0_100", "sub_0_1000", "sub_hard"],
-		"multiplication": ["mul_13_15", "mul_hard", "mul_hard"],
-		"division": ["div_13_15", "div_hard", "div_hard"],
-	},
-	"hard": {
-		"addition": ["add_2_digits", "add_over_1000", "add_over_1000"],
-		"subtraction": ["sub_0_100", "sub_0_1000", "sub_hard"],
-		"multiplication": ["mul_13_15", "mul_hard", "mul_hard"],
-		"division": ["div_13_15", "div_hard", "div_hard"],
-	},
+const PRACTICE_SETS := {
+	"addition": [["add_1_3", "add_1_5"], ["add_over_10", "add_over_15", "add_over_20", "add_missing"], ["add_2_digits"], ["add_hard"]],
+	"subtraction": [["sub_0_5", "sub_0_10", "sub_0_20_easy"], ["sub_0_20", "sub_0_20_negative", "sub_missing"], ["sub_0_100"], ["sub_hard"]],
+	"multiplication": [["mul_missing_2_3", "mul_2", "mul_3", "mul_4", "mul_5", "mul_0_7"], ["mul_missing_4_5", "mul_6", "mul_7", "mul_8", "mul_9", "mul_10"], ["mul_11_12"], ["mul_hard"]],
+	"division": [["div_missing_1_10", "div_1_5", "div_1_10", "div_2", "div_3", "div_4", "div_5"], ["div_6", "div_7", "div_8", "div_9", "div_10"], ["div_11_12"], ["div_hard"]],
 }
 const OP_SYMBOLS := {"addition": "+", "subtraction": "−", "multiplication": "×", "division": "÷"}
 const ROUND_TIME := 60.0
+const CANDIES_PER_WAVE := 4
 const DIFFICULTIES := {
-	"easy": {"title": "FÁCIL", "seconds": 75.0, "penalty": 1.0, "spawn": 2.4, "speed_min": 500.0, "speed_max": 590.0, "number_min": 1, "number_max": 10, "tier": 0},
-	"normal": {"title": "NORMAL", "seconds": 60.0, "penalty": 3.0, "spawn": 1.9, "speed_min": 610.0, "speed_max": 710.0, "number_min": 2, "number_max": 25, "tier": 1},
-	"hard": {"title": "DIFÍCIL", "seconds": 45.0, "penalty": 5.0, "spawn": 1.45, "speed_min": 740.0, "speed_max": 860.0, "number_min": 10, "number_max": 99, "tier": 2},
+	"easy": {"title": "FÁCIL", "seconds": 75.0, "penalty": 1.0, "spawn": 2.4, "speed_min": 500.0, "speed_max": 590.0, "gravity_scale": 0.68, "tier": 0},
+	"normal": {"title": "NORMAL", "seconds": 60.0, "penalty": 3.0, "spawn": 1.9, "speed_min": 610.0, "speed_max": 710.0, "gravity_scale": 1.0, "tier": 1, "max_tier": 3},
+	"hard": {"title": "DIFÍCIL", "seconds": 45.0, "penalty": 5.0, "spawn": 1.9, "speed_min": 740.0, "speed_max": 860.0, "gravity_scale": 1.47, "tier": 2, "max_tier": 2},
 }
 
 @onready var candy_layer: Node2D = $CandyLayer
@@ -121,6 +108,7 @@ func _ready() -> void:
 	retry_button.pressed.connect(_retry_round)
 	game_over_exit_button.pressed.connect(_exit_to_menu)
 	api_token = OS.get_environment("GAUSS_API_TOKEN").strip_edges()
+	local_mode = api_token.is_empty()
 	var configured_url := OS.get_environment("GAUSS_API_URL").strip_edges()
 	if not configured_url.is_empty():
 		api_base_url = configured_url.trim_suffix("/")
@@ -137,7 +125,7 @@ func _ready() -> void:
 			difficulty = DIFFICULTIES[difficulty_id]
 		var saved_operations: Variant = config.get_value("session", "operations", PackedStringArray(["multiplication"]))
 		for operation in saved_operations:
-			if PRACTICE_TIERS[selected_difficulty].has(str(operation)):
+			if PRACTICE_SETS.has(str(operation)):
 				selected_operations.append(str(operation))
 		if not selected_operations.is_empty():
 			selected_operation = selected_operations.pick_random()
@@ -168,8 +156,8 @@ func _ready() -> void:
 	hint_label.visible = bool(settings.show_hints)
 	_update_score()
 	_update_record()
-	if not api_token.is_empty():
-		local_mode = false
+	if local_mode:
+		hint_label.text = "Modo offline: contas dos mesmos conjuntos de pratica da API."
 	start_round()
 
 func start_round() -> void:
@@ -189,11 +177,13 @@ func start_round() -> void:
 	remaining_time = round_seconds
 	elapsed_seconds = 0.0
 	spawn_clock = 0.0
+	retry_clock = 0.0
 	attempts = 0
 	correct_attempts = 0
 	consecutive_wrong_answers = 0
 	game_running = true
 	request_pending = false
+	active_question.clear()
 	_update_score()
 	_update_timer()
 	_request_next_question()
@@ -214,6 +204,10 @@ func _process(delta: float) -> void:
 			_spawn_wave()
 			var speed_factor := 1.0 + (float(score) / 100.0) * 0.06
 			spawn_clock = maxf(0.52, spawn_interval / speed_factor)
+		if active_question.is_empty() and not request_pending and pending_attempt.is_empty():
+			retry_clock -= delta
+			if retry_clock <= 0.0:
+				_request_next_question()
 		_update_timer()
 		if remaining_time <= 0.0:
 			_end_round()
@@ -224,6 +218,9 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE and not game_running:
+		SceneFlow.change_scene("res://scenes/menu.tscn")
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		pointer_down = event.pressed
 		if pointer_down:
@@ -279,6 +276,7 @@ func _spawn_wave() -> void:
 		var launch := Vector2(randf_range(-candy_horizontal_spread, candy_horizontal_spread), -randf_range(candy_launch_speed_min, candy_launch_speed_max))
 		var candy := candy_scene.instantiate() as GaussCandy
 		candy.setup(answers[index], randi_range(0, 15), launch)
+		candy.fall_gravity *= float(difficulty.get("gravity_scale", 1.0))
 		candy.position = spawn_point.position + Vector2(randf_range(-spawn_point_jitter, spawn_point_jitter), randf_range(50.0, 100.0))
 		candy.scale = Vector2.ONE * randf_range(0.91, 1.05)
 		candy.smashed.connect(_on_candy_smashed)
@@ -288,7 +286,7 @@ func _spawn_wave() -> void:
 func _make_choices(answer: int) -> Array[int]:
 	var values: Array[int] = [answer]
 	var offset := 1
-	while values.size() < 4:
+	while values.size() < CANDIES_PER_WAVE:
 		var candidate := answer + (offset if randf() < 0.5 else -offset)
 		if candidate >= 0 and not values.has(candidate):
 			values.append(candidate)
@@ -301,52 +299,136 @@ func _request_next_question() -> void:
 	active_question.clear()
 	if not selected_operations.is_empty():
 		selected_operation = selected_operations.pick_random()
-	if local_mode:
-		active_question = _build_local_question()
-		_equation_for(active_question)
-		return
 	request_pending = true
-	var tier_index := mini(floori(float(score) / 240.0), 2)
-	var practice_set: String = PRACTICE_TIERS[selected_difficulty][selected_operation][tier_index]
+	var starting_tier := int(difficulty.get("tier", 0))
+	var maximum_tier := int(difficulty.get("max_tier", 2))
+	var tier_index := mini(starting_tier + floori(float(score) / 240.0), maximum_tier)
+	var practice_set_pool: Array = PRACTICE_SETS[selected_operation][tier_index]
+	var practice_set: String = str(practice_set_pool.pick_random())
+	if local_mode:
+		active_question = _build_local_question(practice_set)
+		_equation_for(active_question)
+		hint_label.text = "Modo offline: contas dos mesmos conjuntos de pratica da API."
+		request_pending = false
+		return
 	var query := "gameId=%s&operation=%s&practiceMode=free_practice&practiceSet=%s" % [game_id.uri_encode(), selected_operation, practice_set]
 	var headers := ["Authorization: Bearer %s" % api_token, "Accept: application/json"]
 	var error := api.request("%s/learning/games/next-question?%s" % [api_base_url, query], headers, HTTPClient.METHOD_GET)
 	if error != OK:
 		request_pending = false
+		retry_clock = 2.5
 
 
-func _build_local_question() -> Dictionary:
-	var low := int(difficulty.get("number_min", 2))
-	var high := int(difficulty.get("number_max", 25))
-	if score >= 240 and selected_difficulty != "easy":
-		high = mini(high + floori(float(score) / 240.0) * 10, 999)
-	var a := randi_range(low, high)
-	var b := randi_range(low, high)
-	var symbol: String = OP_SYMBOLS[selected_operation]
-	var answer := 0
-	if selected_operation == "addition":
-		answer = a + b
-	elif selected_operation == "subtraction":
-		if b > a:
-			var swap := a
-			a = b
-			b = swap
-		answer = a - b
-	elif selected_operation == "multiplication":
-		answer = a * b
-	else:
-		answer = b
-		a = a * b
-	var missing_index := randi_range(0, 2)
-	var operation := {"kind": selected_operation, "symbol": symbol, "operands": [a, b], "operators": [selected_operation]}
-	if missing_index < 2:
+func _build_local_question(practice_set: String) -> Dictionary:
+	var operands: Array[int] = []
+	var operators: Array[String] = []
+	var missing_index := -1
+	var result := 0
+	match practice_set:
+		"add_1_3":
+			operands = [randi_range(1, 3), randi_range(1, 3)]
+		"add_1_5":
+			operands = [randi_range(1, 5), randi_range(1, 5)]
+		"add_over_10":
+			operands = [randi_range(6, 20), randi_range(6, 20)]
+		"add_over_15":
+			operands = [randi_range(8, 25), randi_range(8, 25)]
+		"add_over_20":
+			operands = [randi_range(11, 30), randi_range(11, 30)]
+		"add_missing":
+			operands = [randi_range(0, 20), randi_range(0, 20)]
+			missing_index = randi_range(0, 1)
+			result = operands[0] + operands[1]
+		"add_2_digits":
+			operands = [randi_range(10, 99), randi_range(10, 99)]
+		"add_hard":
+			operands = [randi_range(100, 999), randi_range(100, 999), randi_range(10, 99)]
+		"sub_0_5":
+			var first := randi_range(0, 5)
+			operands = [first, randi_range(0, first)]
+		"sub_0_10":
+			var first := randi_range(0, 10)
+			operands = [first, randi_range(0, first)]
+		"sub_0_20_easy":
+			var first := randi_range(0, 20)
+			operands = [first, randi_range(0, first)]
+		"sub_0_20":
+			var first := randi_range(0, 20)
+			operands = [first, randi_range(0, first)]
+		"sub_0_20_negative":
+			var first := randi_range(0, 19)
+			operands = [first, randi_range(first + 1, 20)]
+		"sub_missing":
+			operands = [randi_range(0, 20), randi_range(0, 20)]
+			missing_index = randi_range(0, 1)
+			result = operands[0] - operands[1]
+		"sub_0_100":
+			var first := randi_range(0, 100)
+			operands = [first, randi_range(0, first)]
+		"sub_hard":
+			operands = [randi_range(100, 9999), randi_range(100, 9999)]
+		"mul_missing_2_3":
+			var known := randi_range(2, 3)
+			var answer := randi_range(1, 12)
+			if randf() < 0.5:
+				operands.append_array([answer, known])
+			else:
+				operands.append_array([known, answer])
+			missing_index = randi_range(0, 1)
+			result = operands[0] * operands[1]
+		"mul_missing_4_5":
+			var known := randi_range(4, 5)
+			var answer := randi_range(1, 12)
+			if randf() < 0.5:
+				operands.append_array([answer, known])
+			else:
+				operands.append_array([known, answer])
+			missing_index = randi_range(0, 1)
+			result = operands[0] * operands[1]
+		"mul_2", "mul_3", "mul_4", "mul_5", "mul_6", "mul_7", "mul_8", "mul_9", "mul_10":
+			var table_factor := int(practice_set.trim_prefix("mul_"))
+			var other_factor := randi_range(0, 12)
+			if randf() < 0.5:
+				operands.append_array([table_factor, other_factor])
+			else:
+				operands.append_array([other_factor, table_factor])
+		"mul_0_7":
+			operands = [randi_range(0, 7), randi_range(0, 7)]
+		"mul_11_12":
+			var fixed_factor := randi_range(11, 12)
+			var factor := randi_range(0, 12)
+			if randf() < 0.5:
+				operands.append_array([fixed_factor, factor])
+			else:
+				operands.append_array([factor, fixed_factor])
+		"mul_hard":
+			operands = [randi_range(10, 99), randi_range(10, 99)]
+		"div_missing_1_10":
+			var divisor := randi_range(1, 10)
+			var quotient := randi_range(1, 12)
+			operands = [divisor * quotient, divisor]
+			missing_index = randi_range(0, 1)
+			result = quotient
+		"div_1_5", "div_1_10":
+			var max_divisor := 5 if practice_set == "div_1_5" else 10
+			var divisor := randi_range(1, max_divisor)
+			operands = [divisor * randi_range(0, 20), divisor]
+		"div_2", "div_3", "div_4", "div_5", "div_6", "div_7", "div_8", "div_9", "div_10":
+			var divisor := int(practice_set.trim_prefix("div_"))
+			operands = [divisor * randi_range(0, 20), divisor]
+		"div_11_12":
+			var divisor := randi_range(11, 12)
+			operands = [divisor * randi_range(0, 20), divisor]
+		"div_hard":
+			var divisor := randi_range(11, 100)
+			operands = [divisor * randi_range(0, 20), divisor]
+	operators.resize(maxi(0, operands.size() - 1))
+	operators.fill(selected_operation)
+	var operation := {"kind": selected_operation, "symbol": OP_SYMBOLS[selected_operation], "operands": operands, "operators": operators}
+	if missing_index >= 0:
 		operation["missingIndex"] = missing_index
-		match selected_operation:
-			"addition": operation["result"] = a + b
-			"subtraction": operation["result"] = a - b
-			"multiplication": operation["result"] = a * b
-			"division": operation["result"] = floori(float(a) / float(b))
-	return {"answer": answer, "operation": operation}
+		operation["result"] = result
+	return {"operation": operation}
 
 
 func _equation_for(question: Dictionary) -> void:
@@ -381,15 +463,36 @@ func _question_target(question: Dictionary) -> int:
 	var missing_index := int(operation.get("missingIndex", -1))
 	if missing_index >= 0 and missing_index < operands.size():
 		return int(operands[missing_index])
-	if operands.size() < 2:
+	if operands.is_empty():
 		return int(question.get("answer", 0))
 	var kind: String = operation.get("kind", selected_operation)
-	match kind:
-		"addition": return int(operands[0]) + int(operands[1])
-		"subtraction": return int(operands[0]) - int(operands[1])
-		"multiplication": return int(operands[0]) * int(operands[1])
-		"division": return floori(float(operands[0]) / float(operands[1]))
-	return 0
+	var operators: Array = operation.get("operators", [])
+	if operators.is_empty():
+		for _index in range(operands.size() - 1):
+			operators.append(kind)
+	if operators.size() != operands.size() - 1:
+		return int(question.get("answer", 0))
+	var values: Array[float] = [float(operands[0])]
+	var low_operators: Array[String] = []
+	for index in range(operators.size()):
+		var next_value := float(operands[index + 1])
+		var operator_name := str(operators[index])
+		if operator_name == "multiplication":
+			values[values.size() - 1] *= next_value
+		elif operator_name == "division":
+			if is_zero_approx(next_value):
+				return int(question.get("answer", 0))
+			values[values.size() - 1] /= next_value
+		else:
+			low_operators.append(operator_name)
+			values.append(next_value)
+	var result := values[0]
+	for index in range(low_operators.size()):
+		if low_operators[index] == "addition":
+			result += values[index + 1]
+		else:
+			result -= values[index + 1]
+	return roundi(result)
 
 
 func _on_candy_smashed(candy: GaussCandy) -> void:
@@ -444,12 +547,20 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 		if not pending_attempt.is_empty():
 			retry_clock = 2.5
 			return
+		if game_running and active_question.is_empty():
+			hint_label.text = "A conta não carregou. Tentando conectar de novo…"
+			retry_clock = 2.5
+			return
 	if response_code < 200 or response_code >= 300:
 		if not pending_attempt.is_empty():
 			pending_attempt.clear()
-			game_running = false
+		game_running = false
+		equation_label.text = "Não foi possível carregar as contas da API."
+		hint_label.text = "Confira sua conta Project Gauss e tente novamente."
 		return
 	if not parsed is Dictionary:
+		game_running = false
+		equation_label.text = "A API enviou uma conta em formato inesperado."
 		return
 	if parsed.has("correct"):
 		pending_attempt.clear()
@@ -459,6 +570,7 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 		var operation: Dictionary = active_question.get("operation", {})
 		selected_operation = str(operation.get("kind", selected_operation))
 		_equation_for(active_question)
+		hint_label.text = "Acerte um doce com o número!"
 		request_pending = false
 
 
