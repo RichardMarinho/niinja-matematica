@@ -21,9 +21,9 @@ const OP_SYMBOLS := {"addition": "+", "subtraction": "−", "multiplication": "�
 const ROUND_TIME := 60.0
 const CANDIES_PER_WAVE := 4
 const DIFFICULTIES := {
-	"easy": {"title": "FÁCIL", "seconds": 75.0, "penalty": 1.0, "spawn": 2.4, "speed_min": 500.0, "speed_max": 590.0, "gravity_scale": 0.68, "tier": 0},
-	"normal": {"title": "NORMAL", "seconds": 60.0, "penalty": 3.0, "spawn": 1.9, "speed_min": 610.0, "speed_max": 710.0, "gravity_scale": 1.0, "tier": 1, "max_tier": 3},
-	"hard": {"title": "DIFÍCIL", "seconds": 45.0, "penalty": 5.0, "spawn": 1.9, "speed_min": 740.0, "speed_max": 860.0, "gravity_scale": 1.47, "tier": 2, "max_tier": 2},
+	"easy": {"title": "FÁCIL", "seconds": 60.0, "penalty": 1.0, "spawn": 3.8, "speed_min": 500.0, "speed_max": 550.0, "gravity_scale": 0.62, "tier": 0},
+	"normal": {"title": "NORMAL", "seconds": 60.0, "penalty": 3.0, "spawn": 3.3, "speed_min": 560.0, "speed_max": 610.0, "gravity_scale": 0.72, "tier": 1, "max_tier": 3},
+	"hard": {"title": "DIFÍCIL", "seconds": 60.0, "penalty": 5.0, "spawn": 3.0, "speed_min": 590.0, "speed_max": 670.0, "gravity_scale": 0.88, "tier": 2, "max_tier": 2},
 }
 
 @onready var candy_layer: Node2D = $CandyLayer
@@ -638,8 +638,16 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 		AudioManager.play_correct()
 		combo += 1
 		correct_attempts += 1
-		score += 10 + mini(combo, 10) * 2
-		hint_label.text = "ACERTO! Próxima conta chegando…"
+		var streak_bonus := mini(combo, 10)
+		var time_reward := 15.0
+		match combo:
+			1: time_reward = 5.0
+			2: time_reward = 7.0
+			3: time_reward = 10.0
+			4: time_reward = 12.0
+		remaining_time = minf(round_seconds, remaining_time + time_reward)
+		score += 10 + streak_bonus * 3
+		hint_label.text = "ACERTO! Sequencia %d! +%ds de tempo!" % [combo, roundi(time_reward)]
 	else:
 		consecutive_wrong_answers += 1
 		_flash_feedback(Color(1.0, 0.12, 0.1, 1.0))
