@@ -13,6 +13,7 @@ var velocity := Vector2.ZERO
 @export_range(100.0, 1500.0, 25.0) var fall_gravity := 520.0
 var is_smashed := false
 var candy_frame := 0
+var reduced_motion := false
 
 
 func setup(number: int, frame_index: int, initial_velocity: Vector2) -> void:
@@ -40,7 +41,8 @@ func _physics_process(delta: float) -> void:
 		return
 	velocity.y += fall_gravity * delta
 	global_position += velocity * delta
-	rotation += velocity.x * delta * 0.0007
+	if not reduced_motion:
+		rotation += velocity.x * delta * 0.0007
 	if global_position.y > get_viewport_rect().size.y + 100.0:
 		queue_free()
 

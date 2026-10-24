@@ -13,7 +13,7 @@ extends Node2D
 
 const PRACTICE_SETS := {
 	"addition": [["add_1_3", "add_1_5"], ["add_over_10", "add_over_15", "add_over_20", "add_missing"], ["add_2_digits"], ["add_hard"]],
-	"subtraction": [["sub_0_5", "sub_0_10", "sub_0_20_easy"], ["sub_0_20", "sub_0_20_negative", "sub_missing"], ["sub_0_100"], ["sub_hard"]],
+	"subtraction": [["sub_0_5", "sub_0_10", "sub_0_20_easy"], ["sub_0_20", "sub_missing"], ["sub_0_100"], ["sub_hard"]],
 	"multiplication": [["mul_missing_2_3", "mul_2", "mul_3", "mul_4", "mul_5", "mul_0_7"], ["mul_missing_4_5", "mul_6", "mul_7", "mul_8", "mul_9", "mul_10"], ["mul_11_12"], ["mul_hard"]],
 	"division": [["div_missing_1_10", "div_1_5", "div_1_10", "div_2", "div_3", "div_4", "div_5"], ["div_6", "div_7", "div_8", "div_9", "div_10"], ["div_11_12"], ["div_hard"]],
 }
@@ -66,6 +66,7 @@ const DIFFICULTIES := {
 @onready var game_over_score: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/ScoreValue
 @onready var game_over_correct: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/CorrectValue
 @onready var game_over_attempts: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/AttemptsValue
+@onready var background: Sprite2D = $Background
 @onready var retry_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/RetryButton
 @onready var game_over_exit_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/ExitButton
 
@@ -73,6 +74,7 @@ var selected_operation := "multiplication"
 var selected_operations: Array[String] = []
 var selected_difficulty := "normal"
 var difficulty: Dictionary = DIFFICULTIES["normal"]
+var active_school_year := 0
 var settings := {"show_hints": true, "fullscreen": false, "music": true, "sfx": true}
 var score := 0
 var record := 0
@@ -93,11 +95,22 @@ var consecutive_wrong_answers := 0
 var pending_attempt: Dictionary = {}
 var retry_clock := 0.0
 var feedback_tween: Tween
+var accessibility_profile := {
+	"textScale": 1.0, "contrast": "standard", "reducedMotion": false,
+	"focusMode": false, "pace": "normal", "soundEffects": "on",
+	"audioAssistance": false, "captions": true, "preferredInput": "auto",
+	"accessibleActivity": "auto",
+}
+var accessibility_callback_ref: JavaScriptObject
+var waiting_for_accessibility_profile := false
+var accessibility_profile_received := false
 
 
 func _ready() -> void:
 	if not SceneFlow.enter_scene_from_menu():
 		return
+	if OS.has_feature("web"):
+		waiting_for_accessibility_profile = _install_accessibility_bridge()
 	_apply_gameplay_number_font()
 	api.request_completed.connect(_on_api_request_completed)
 	pause_button.pressed.connect(_open_pause)
@@ -167,10 +180,145 @@ func _ready() -> void:
 	_update_score()
 	_update_record()
 	if local_mode:
+		equation_label.text = "Entre pelo Project Gauss para jogar."
+		hint_label.text = "Sem sessão autenticada, as respostas não podem ser corrigidas nem registradas no seu progresso."
+		return
+	if local_mode:
 		hint_label.text = "Modo offline: contas dos mesmos conjuntos de pratica da API."
-	start_round()
+	if waiting_for_accessibility_profile:
+		equation_label.text = "Carregando ajustes de acessibilidade..."
+	else:
+		start_round()
+
+
+func _install_accessibility_bridge() -> bool:
+	var window := JavaScriptBridge.get_interface("window")
+	accessibility_callback_ref = JavaScriptBridge.create_callback(_on_accessibility_profile_message)
+	window.__gaussNinjaAccessibilityCallback = accessibility_callback_ref
+	JavaScriptBridge.eval("""
+		(function() {
+			if (!window.__gaussNinjaAccessibilityListener) {
+				window.__gaussNinjaAccessibilityListener = function(event) {
+					if (event.origin !== window.location.origin || event.source !== window.parent) return;
+					if (!event.data || event.data.type !== 'gauss-accessibility-profile') return;
+					if (typeof window.__gaussNinjaAccessibilityCallback === 'function')
+						window.__gaussNinjaAccessibilityCallback(JSON.stringify(event.data));
+				};
+				window.addEventListener('message', window.__gaussNinjaAccessibilityListener);
+			}
+			if (window.parent !== window)
+				window.parent.postMessage({type: 'gauss-accessibility-ready'}, window.location.origin);
+		})()
+	""")
+	return bool(JavaScriptBridge.eval("window.parent !== window"))
+
+
+func _on_accessibility_profile_message(args: Array) -> void:
+	if args.is_empty() or not args[0] is String:
+		return
+	var envelope: Variant = JSON.parse_string(str(args[0]))
+	if not envelope is Dictionary or int(envelope.get("version", 0)) != 1 or not envelope.get("profile") is Dictionary:
+		return
+	var profile: Dictionary = envelope.profile
+	if int(profile.get("version", 0)) != 1:
+		return
+	if not [1.0, 1.25, 1.5, 2.0].has(float(profile.get("textScale", -1.0))):
+		return
+	if not ["standard", "high"].has(profile.get("contrast")):
+		return
+	if not ["normal", "extended", "untimed"].has(profile.get("pace")):
+		return
+	if not ["on", "off"].has(profile.get("soundEffects")):
+		return
+	if not ["auto", "keyboard", "touch"].has(profile.get("preferredInput")):
+		return
+	if not ["auto", "game", "react"].has(profile.get("accessibleActivity")):
+		return
+	for field in ["reducedMotion", "focusMode", "audioAssistance", "captions"]:
+		if typeof(profile.get(field)) != TYPE_BOOL:
+			return
+	accessibility_profile = profile.duplicate(true)
+	accessibility_profile_received = true
+	_apply_accessibility_profile()
+	if accessibility_profile.accessibleActivity == "react":
+		waiting_for_accessibility_profile = false
+		game_running = false
+		equation_label.text = "Este perfil pede a atividade React acessivel."
+		hint_label.text = "O host ainda nao oferece a alternativa React do MathNinja; volte ao menu para escolher outra atividade."
+		return
+	if waiting_for_accessibility_profile and not game_running:
+		waiting_for_accessibility_profile = false
+		start_round()
+
+
+func _apply_accessibility_profile() -> void:
+	AudioManager.set_sfx_enabled(bool(settings.sfx) and accessibility_profile.soundEffects == "on")
+	background.modulate = Color(0.55, 0.55, 0.55, 1.0) if accessibility_profile.focusMode else Color.WHITE
+	_apply_accessibility_text_scale($HUD/Root, float(accessibility_profile.textScale))
+	if accessibility_profile.contrast == "high":
+		_set_label_contrast($HUD/Root)
+	else:
+		_clear_label_contrast($HUD/Root)
+	round_seconds = float(difficulty.seconds) * (1.5 if accessibility_profile.pace == "extended" else 1.0)
+	if not game_running:
+		remaining_time = round_seconds
+	timer_label.visible = true
+	for child in candy_layer.get_children():
+		var candy := child as GaussCandy
+		if candy:
+			var still_answers: bool = accessibility_profile.pace == "untimed"
+			candy.set_physics_process(not still_answers)
+			candy.velocity = Vector2.ZERO if still_answers else Vector2(randf_range(-candy_horizontal_spread, candy_horizontal_spread), -randf_range(candy_launch_speed_min, candy_launch_speed_max))
+	if accessibility_profile.pace == "untimed":
+		hint_label.text = "Sem limite de tempo. Escolha um doce com clique/toque ou teclas 1 a 4."
+	elif accessibility_profile.preferredInput == "keyboard":
+		hint_label.text = "Use as teclas 1 a 4 para escolher um doce."
+
+
+func _apply_accessibility_text_scale(node: Node, scale: float) -> void:
+	if node is Control:
+		var control := node as Control
+		if control.has_theme_font_size("font_size"):
+			if not control.has_meta("gauss_base_font_size"):
+				control.set_meta("gauss_base_font_size", control.get_theme_font_size("font_size"))
+			var base_size := int(control.get_meta("gauss_base_font_size"))
+			control.add_theme_font_size_override("font_size", maxi(12, roundi(float(base_size) * scale)))
+	for child in node.get_children():
+		_apply_accessibility_text_scale(child, scale)
+
+
+func _set_label_contrast(node: Node) -> void:
+	if node is BaseButton and _is_pause_art_button(node):
+		_set_pause_art_button_text_transparent(node as BaseButton)
+	elif node is Label or node is BaseButton:
+		(node as Control).add_theme_color_override("font_color", Color.BLACK)
+		(node as Control).add_theme_color_override("font_shadow_color", Color.WHITE)
+	for child in node.get_children():
+		_set_label_contrast(child)
+
+
+func _clear_label_contrast(node: Node) -> void:
+	if node is BaseButton and _is_pause_art_button(node):
+		_set_pause_art_button_text_transparent(node as BaseButton)
+	elif node is Label or node is BaseButton:
+		(node as Control).remove_theme_color_override("font_color")
+		(node as Control).remove_theme_color_override("font_shadow_color")
+	for child in node.get_children():
+		_clear_label_contrast(child)
+
+
+func _is_pause_art_button(node: Node) -> bool:
+	return node == resume_button or node == pause_options_button or node == pause_exit_button or node == pause_options_back_button
+
+
+func _set_pause_art_button_text_transparent(button: BaseButton) -> void:
+	button.remove_theme_color_override("font_shadow_color")
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color", "font_disabled_color"]:
+		button.add_theme_color_override(state, Color(1.0, 1.0, 1.0, 0.0))
 
 func start_round() -> void:
+	if local_mode:
+		return
 	if not pending_attempt.is_empty():
 		return
 	if request_pending:
@@ -208,7 +356,8 @@ func _apply_gameplay_number_font() -> void:
 func _process(delta: float) -> void:
 	if game_running:
 		elapsed_seconds += delta
-		remaining_time = maxf(0.0, remaining_time - delta)
+		if accessibility_profile.pace != "untimed":
+			remaining_time = maxf(0.0, remaining_time - delta)
 		spawn_clock -= delta
 		if spawn_clock <= 0.0 and not request_pending and pending_attempt.is_empty() and not active_question.is_empty():
 			_spawn_wave()
@@ -219,7 +368,7 @@ func _process(delta: float) -> void:
 			if retry_clock <= 0.0:
 				_request_next_question()
 		_update_timer()
-		if remaining_time <= 0.0:
+		if accessibility_profile.pace != "untimed" and remaining_time <= 0.0:
 			_end_round()
 	if not pending_attempt.is_empty() and not request_pending:
 		retry_clock -= delta
@@ -228,6 +377,13 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_R and accessibility_profile.audioAssistance:
+			_read_current_question()
+			return
+		if event.keycode >= KEY_1 and event.keycode <= KEY_4:
+			_smash_answer_index(event.keycode - KEY_1)
+			return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE and not game_running:
 		SceneFlow.change_scene("res://scenes/menu.tscn")
 		return
@@ -285,12 +441,35 @@ func _spawn_wave() -> void:
 		var spawn_point := points[index % points.size()] as Marker2D
 		var launch := Vector2(randf_range(-candy_horizontal_spread, candy_horizontal_spread), -randf_range(candy_launch_speed_min, candy_launch_speed_max))
 		var candy := candy_scene.instantiate() as GaussCandy
-		candy.setup(answers[index], randi_range(0, 15), launch)
+		var still_answers: bool = accessibility_profile.pace == "untimed"
+		candy.setup(answers[index], 0 if accessibility_profile.reducedMotion else randi_range(0, 15), Vector2.ZERO if still_answers else launch)
+		candy.reduced_motion = bool(accessibility_profile.reducedMotion)
 		candy.fall_gravity *= float(difficulty.get("gravity_scale", 1.0))
-		candy.position = spawn_point.position + Vector2(randf_range(-spawn_point_jitter, spawn_point_jitter), randf_range(50.0, 100.0))
-		candy.scale = Vector2.ONE * randf_range(0.91, 1.05)
+		candy.position = spawn_point.position + Vector2(randf_range(-spawn_point_jitter, spawn_point_jitter), 75.0 if still_answers else randf_range(50.0, 100.0))
+		candy.scale = Vector2.ONE if still_answers else Vector2.ONE * randf_range(0.91, 1.05)
 		candy.smashed.connect(_on_candy_smashed)
 		candy_layer.add_child(candy)
+		if still_answers:
+			candy.set_physics_process(false)
+
+
+func _smash_answer_index(index: int) -> void:
+	if not game_running or request_pending:
+		return
+	var candies := candy_layer.get_children()
+	if index < 0 or index >= candies.size():
+		return
+	var candy := candies[index] as GaussCandy
+	if candy and not candy.is_smashed:
+		candy.smash()
+
+
+func _read_current_question() -> void:
+	if not OS.has_feature("web") or active_question.is_empty():
+		return
+	var spoken_question := str(active_question.get("accessibleDescription", active_question.get("prompt", equation_label.text)))
+	var text := JSON.stringify(spoken_question)
+	JavaScriptBridge.eval("if (window.speechSynthesis) { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(%s)); }" % text)
 
 
 func _make_choices(answer: int) -> Array[int]:
@@ -316,10 +495,9 @@ func _request_next_question() -> void:
 	var practice_set_pool: Array = PRACTICE_SETS[selected_operation][tier_index]
 	var practice_set: String = str(practice_set_pool.pick_random())
 	if local_mode:
-		active_question = _build_local_question(practice_set)
-		_equation_for(active_question)
-		hint_label.text = "Modo offline: contas dos mesmos conjuntos de pratica da API."
-		request_pending = false
+		game_running = false
+		equation_label.text = "Entre pelo Project Gauss para jogar."
+		hint_label.text = "A sessao autenticada e necessaria para buscar questoes e registrar seu progresso."
 		return
 	var query := "gameId=%s&operation=%s&practiceMode=free_practice&practiceSet=%s" % [game_id.uri_encode(), selected_operation, practice_set]
 	var headers := ["Authorization: Bearer %s" % api_token, "Accept: application/json"]
@@ -365,9 +543,6 @@ func _build_local_question(practice_set: String) -> Dictionary:
 		"sub_0_20":
 			var first := randi_range(0, 20)
 			operands = [first, randi_range(0, first)]
-		"sub_0_20_negative":
-			var first := randi_range(0, 19)
-			operands = [first, randi_range(first + 1, 20)]
 		"sub_missing":
 			operands = [randi_range(0, 20), randi_range(0, 20)]
 			missing_index = randi_range(0, 1)
@@ -446,7 +621,8 @@ func _equation_for(question: Dictionary) -> void:
 	var operands: Array = operation.get("operands", [])
 	var operators: Array = operation.get("operators", [])
 	if operands.is_empty():
-		equation_label.text = question.get("equation", "Resolva a conta!")
+		equation_label.text = str(question.get("equation", "Conta numérica indisponível"))
+		call_deferred("_update_answer_instructions")
 		return
 	var symbol: String = operation.get("symbol", OP_SYMBOLS.get(selected_operation, "?"))
 	if int(operation.get("missingIndex", -1)) >= 0:
@@ -465,6 +641,14 @@ func _equation_for(question: Dictionary) -> void:
 			if index < operators.size():
 				parts.append(" %s " % OP_SYMBOLS.get(operators[index], symbol))
 		equation_label.text = "%s = ?" % "".join(parts)
+	call_deferred("_update_answer_instructions")
+
+
+func _update_answer_instructions() -> void:
+	var year_text := "%d ano · " % active_school_year if active_school_year > 0 else ""
+	var input_text := "toque ou clique" if accessibility_profile.preferredInput == "touch" else "clique/toque ou teclas 1 a 4, da esquerda para a direita"
+	var audio_text := " Pressione R para ouvir a conta." if accessibility_profile.audioAssistance else ""
+	hint_label.text = "%sescolha uma resposta com %s.%s" % [year_text, input_text, audio_text]
 
 
 func _question_target(question: Dictionary) -> int:
@@ -514,7 +698,10 @@ func _on_candy_smashed(candy: GaussCandy) -> void:
 	for node in candy_layer.get_children():
 		var remaining_candy := node as GaussCandy
 		if remaining_candy and remaining_candy != candy:
-			remaining_candy.fall_away()
+			if accessibility_profile.pace == "untimed":
+				remaining_candy.queue_free()
+			else:
+				remaining_candy.fall_away()
 	spawn_clock = maxf(spawn_clock, 0.85)
 	if local_mode:
 		_resolve_attempt(candy.value == _question_target(active_question), candy.value)
@@ -528,6 +715,7 @@ func _on_candy_smashed(candy: GaussCandy) -> void:
 		"phaseId": active_question.get("phaseId", "practice"),
 		"exerciseId": active_question.get("exerciseId", ""),
 		"choice": candy.value,
+		"difficulty": selected_difficulty,
 		"practiceMode": "free_practice",
 		"occurredAt": Time.get_datetime_string_from_system(true),
 	}
@@ -575,8 +763,17 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 	if parsed.has("correct"):
 		pending_attempt.clear()
 		_resolve_attempt(bool(parsed.correct), int(parsed.get("pointsDelta", 0)), true)
+		var feedback: Variant = parsed.get("feedback", {})
+		if not bool(parsed.correct) and feedback is Dictionary and not str(feedback.get("reason", "")).is_empty():
+			hint_label.text = str(feedback.reason)
 	else:
+		if not parsed.has("schoolYear"):
+			game_running = false
+			equation_label.text = "A API nao informou a serie desta questao."
+			hint_label.text = "A questao nao foi iniciada sem uma serie validada."
+			return
 		active_question = parsed
+		active_school_year = int(parsed.schoolYear)
 		var operation: Dictionary = active_question.get("operation", {})
 		selected_operation = str(operation.get("kind", selected_operation))
 		_equation_for(active_question)
@@ -649,22 +846,25 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 		combo += 1
 		correct_attempts += 1
 		var streak_bonus := mini(combo, 10)
-		var time_reward := 15.0
-		match combo:
-			1: time_reward = 5.0
-			2: time_reward = 7.0
-			3: time_reward = 10.0
-			4: time_reward = 12.0
-		remaining_time = minf(round_seconds, remaining_time + time_reward)
+		var time_reward := 0.0
+		if accessibility_profile.pace != "untimed":
+			time_reward = 15.0
+			match combo:
+				1: time_reward = 5.0
+				2: time_reward = 7.0
+				3: time_reward = 10.0
+				4: time_reward = 12.0
+			remaining_time = minf(round_seconds, remaining_time + time_reward)
 		score += 10 + streak_bonus * 3
-		hint_label.text = "ACERTO! Sequencia %d! +%ds de tempo!" % [combo, roundi(time_reward)]
+		hint_label.text = "ACERTO! Sequencia %d!" % combo if accessibility_profile.pace == "untimed" else "ACERTO! Sequencia %d! +%ds de tempo!" % [combo, roundi(time_reward)]
 	else:
 		consecutive_wrong_answers += 1
 		_flash_feedback(Color(1.0, 0.12, 0.1, 1.0))
 		combo = 0
 		AudioManager.play_mistake()
-		var penalty := float(difficulty.get("penalty", 3.0))
-		remaining_time = maxf(0.0, remaining_time - penalty)
+		if accessibility_profile.pace != "untimed":
+			var penalty := float(difficulty.get("penalty", 3.0))
+			remaining_time = maxf(0.0, remaining_time - penalty)
 		hint_label.text = "Ops! Esse não era o doce certo. Tente outro!"
 	_update_score()
 	_update_timer()
@@ -677,6 +877,8 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 
 
 func _flash_feedback(flash_color: Color) -> void:
+	if accessibility_profile.reducedMotion:
+		return
 	var material := feedback_flash.material as ShaderMaterial
 	if material == null:
 		return
@@ -710,6 +912,10 @@ func _update_record() -> void:
 
 
 func _update_timer() -> void:
+	if accessibility_profile.pace == "untimed":
+		timer_label.text = "SEM TEMPO"
+		timer_label.modulate = Color.WHITE
+		return
 	var seconds_to_display := int(ceil(remaining_time))
 	if round_seconds <= 60.0:
 		seconds_to_display -= 1
@@ -782,7 +988,7 @@ func _pause_option_toggled(enabled: bool, option_name: String) -> void:
 		settings[option_name] = enabled
 	match option_name:
 		"music": AudioManager.set_music_enabled(enabled)
-		"sfx": AudioManager.set_sfx_enabled(enabled)
+		"sfx": AudioManager.set_sfx_enabled(enabled and accessibility_profile.soundEffects == "on")
 		"fullscreen": AudioManager.set_fullscreen(enabled)
 	var config := ConfigFile.new()
 	config.load("user://ninja_matematica.cfg")
