@@ -1,6 +1,10 @@
 extends Node2D
 
 const SETTINGS_PATH := "user://ninja_matematica.cfg"
+const MULTIPLICATION_UNLOCK_YEAR := 3
+
+@export var api_base_url := "http://127.0.0.1:3001"
+@onready var api: HTTPRequest = $API
 
 @onready var help_button: Button = $HUD/Root/Center/Card/Content/DifficultyHelpButton
 @onready var help_overlay: Control = $HUD/Root/DifficultyHelp
@@ -13,6 +17,10 @@ const SETTINGS_PATH := "user://ninja_matematica.cfg"
 @onready var subtraction_check: CheckButton = $HUD/Root/Center/Card/Content/OperationButtons/SubtractionCheck
 @onready var multiplication_check: CheckButton = $HUD/Root/Center/Card/Content/OperationButtons/MultiplicationCheck
 @onready var division_check: CheckButton = $HUD/Root/Center/Card/Content/OperationButtons/DivisionCheck
+@onready var multiplication_lock: TextureRect = $HUD/Root/Center/OperationToggleArt/MultiplicationLock
+@onready var division_lock: TextureRect = $HUD/Root/Center/OperationToggleArt/DivisionLock
+@onready var multiplication_disabled_overlay: Panel = $HUD/Root/Center/Card/Content/OperationButtons/MultiplicationDisabledOverlay
+@onready var division_disabled_overlay: Panel = $HUD/Root/Center/Card/Content/OperationButtons/DivisionDisabledOverlay
 @onready var status_label: Label = $HUD/Root/Center/Card/Content/Status
 @onready var back_button: Button = $HUD/Root/Center/Card/Content/Actions/BackButton
 @onready var start_button: Button = $HUD/Root/Center/Card/Content/Actions/StartButton
@@ -32,11 +40,15 @@ const SETTINGS_PATH := "user://ninja_matematica.cfg"
 
 var selected_difficulty := ""
 var selected_operations: Array[String] = []
+var api_token := ""
+var active_school_year := 0
+var school_year_load_failed := false
 
 
 func _ready() -> void:
 	if not SceneFlow.enter_scene_from_menu():
 		return
+	api.request_completed.connect(_on_school_year_loaded)
 	help_overlay.visible = false
 	easy_button.pressed.connect(_select_difficulty.bind("easy"))
 	normal_button.pressed.connect(_select_difficulty.bind("normal"))
@@ -49,6 +61,64 @@ func _ready() -> void:
 	start_button.pressed.connect(_start_game)
 	help_button.pressed.connect(_open_difficulty_help)
 	help_close_button.pressed.connect(_close_difficulty_help)
+	_apply_operation_access()
+	_request_school_year()
+
+
+func _request_school_year() -> void:
+	var configured_url := ""
+	if OS.has_feature("web"):
+		api_token = str(JavaScriptBridge.eval("(function(){try{return window.parent.__GAUSS_STUDENT_TOKEN__ || localStorage.getItem('gauss.student.session') || '';}catch(e){return localStorage.getItem('gauss.student.session') || '';}})()")).strip_edges()
+		configured_url = str(JavaScriptBridge.eval("(window.parent && window.parent.__GAUSS_API_URL__) || ''")).strip_edges()
+		api.accept_gzip = false
+	else:
+		api_token = OS.get_environment("GAUSS_API_TOKEN").strip_edges()
+		configured_url = OS.get_environment("GAUSS_API_URL").strip_edges()
+	if not configured_url.is_empty():
+		api_base_url = configured_url.trim_suffix("/")
+	if api_token.is_empty():
+		school_year_load_failed = true
+		_apply_operation_access()
+		return
+	var headers := ["Authorization: Bearer %s" % api_token, "Accept: application/json"]
+	var error := api.request("%s/learning/lessons" % api_base_url, headers, HTTPClient.METHOD_GET)
+	if error != OK:
+		school_year_load_failed = true
+		_apply_operation_access()
+
+
+func _on_school_year_loaded(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	var parsed: Variant = JSON.parse_string(body.get_string_from_utf8())
+	if result != HTTPRequest.RESULT_SUCCESS or response_code < 200 or response_code >= 300 or not parsed is Dictionary:
+		school_year_load_failed = true
+		_apply_operation_access()
+		return
+	var received_year := int(parsed.get("schoolYear", 0))
+	if received_year < 1 or received_year > 12:
+		school_year_load_failed = true
+		_apply_operation_access()
+		return
+	active_school_year = received_year
+	_apply_operation_access()
+
+
+func _apply_operation_access() -> void:
+	var operations_unlocked := active_school_year >= MULTIPLICATION_UNLOCK_YEAR
+	multiplication_check.disabled = not operations_unlocked
+	division_check.disabled = not operations_unlocked
+	if not operations_unlocked:
+		multiplication_check.button_pressed = false
+		division_check.button_pressed = false
+		selected_operations.erase("multiplication")
+		selected_operations.erase("division")
+	multiplication_lock.visible = not operations_unlocked
+	division_lock.visible = not operations_unlocked
+	multiplication_disabled_overlay.visible = not operations_unlocked
+	division_disabled_overlay.visible = not operations_unlocked
+	operation_tracks[2].visible = operations_unlocked
+	operation_tracks[3].visible = operations_unlocked
+	multiplication_lock.tooltip_text = "Entre pelo Project Gauss para confirmar a série." if school_year_load_failed else "Multiplicação liberada a partir do 3º ano."
+	division_lock.tooltip_text = "Entre pelo Project Gauss para confirmar a série." if school_year_load_failed else "Divisão liberada a partir do 3º ano."
 	_sync_operation_switch_art()
 	_refresh_start_button()
 
@@ -101,6 +171,8 @@ func _sync_operation_switch_art() -> void:
 	]
 	for index in range(states.size()):
 		var enabled: bool = states[index]
+		if index >= 2 and active_school_year < MULTIPLICATION_UNLOCK_YEAR:
+			continue
 		var track := StyleBoxFlat.new()
 		track.bg_color = Color("#f32678") if enabled else Color("#595455")
 		track.set_corner_radius_all(15)
@@ -109,10 +181,14 @@ func _sync_operation_switch_art() -> void:
 
 
 func _refresh_start_button() -> void:
-	var can_start := not selected_difficulty.is_empty() and not selected_operations.is_empty()
+	var can_start := active_school_year > 0 and not selected_difficulty.is_empty() and not selected_operations.is_empty()
 	start_button.disabled = not can_start
 	start_disabled_overlay.visible = start_button.disabled
-	if can_start:
+	if active_school_year <= 0 and school_year_load_failed:
+		status_label.text = "Entre pelo Project Gauss para confirmar sua série."
+	elif active_school_year <= 0:
+		status_label.text = "Confirmando sua série..."
+	elif can_start:
 		status_label.text = "Pronto! %s · %d operação(ões) selecionada(s)." % [_difficulty_name(selected_difficulty), selected_operations.size()]
 	else:
 		status_label.text = "Escolha uma dificuldade e pelo menos uma operação."
@@ -129,6 +205,16 @@ func _difficulty_name(difficulty: String) -> String:
 func _start_game() -> void:
 	if start_button.disabled:
 		return
+	if active_school_year < MULTIPLICATION_UNLOCK_YEAR:
+		selected_operations.erase("multiplication")
+		selected_operations.erase("division")
+		if multiplication_check.button_pressed:
+			multiplication_check.button_pressed = false
+		if division_check.button_pressed:
+			division_check.button_pressed = false
+		if selected_operations.is_empty():
+			status_label.text = "Escolha adição ou subtração para começar."
+			return
 	var config := ConfigFile.new()
 	config.load(SETTINGS_PATH)
 	config.set_value("session", "difficulty", selected_difficulty)

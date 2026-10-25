@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://ctujfm8jxi0j7" path="res://assets/preparation_reference.png" id="1_bg"]
 [ext_resource type="Script" uid="uid://bb35kp1p13xqa" path="res://scripts/preparation.gd" id="2_script"]
 [ext_resource type="Texture2D" uid="uid://cjqiaqrh4tlnp" path="res://assets/transparent.svg" id="3_transparent"]
+[ext_resource type="Texture2D" path="res://assets/operation_locked_padlock.png" id="4_locked_padlock"]
 
 [sub_resource type="SystemFont" id="SystemFont_portuguese"]
 font_names = PackedStringArray("Arial")
@@ -24,6 +25,13 @@ corner_radius_top_left = 20
 corner_radius_top_right = 20
 corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_operation_disabled"]
+bg_color = Color(0, 0, 0, 0.57254905)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toggle_off"]
 bg_color = Color(0.35, 0.32, 0.32, 1)
@@ -385,6 +393,22 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
 disabled = true
 text = "COMEÇAR"
 
+[node name="MultiplicationDisabledOverlay" type="Panel" parent="HUD/Root/Center/Card/Content/OperationButtons"]
+layout_mode = 0
+offset_left = 399.0
+offset_right = 586.0
+offset_bottom = 58.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_operation_disabled")
+
+[node name="DivisionDisabledOverlay" type="Panel" parent="HUD/Root/Center/Card/Content/OperationButtons"]
+layout_mode = 0
+offset_left = 600.0
+offset_right = 782.0
+offset_bottom = 58.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_operation_disabled")
+
 [node name="OperationToggleArt" type="Control" parent="HUD/Root/Center" unique_id=680118934]
 layout_mode = 1
 anchors_preset = 15
@@ -466,6 +490,28 @@ offset_bottom = 25.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_toggle_knob")
 
+[node name="MultiplicationLock" type="TextureRect" parent="HUD/Root/Center/OperationToggleArt"]
+layout_mode = 0
+offset_left = 785.0
+offset_top = 420.0
+offset_right = 825.0
+offset_bottom = 460.0
+mouse_filter = 2
+texture = ExtResource("4_locked_padlock")
+expand_mode = 1
+stretch_mode = 5
+tooltip_text = "Multiplicação liberada a partir do 3º ano."
+[node name="DivisionLock" type="TextureRect" parent="HUD/Root/Center/OperationToggleArt"]
+layout_mode = 0
+offset_left = 979.0
+offset_top = 420.0
+offset_right = 1019.0
+offset_bottom = 460.0
+mouse_filter = 2
+texture = ExtResource("4_locked_padlock")
+expand_mode = 1
+stretch_mode = 5
+tooltip_text = "Divisão liberada a partir do 3º ano."
 [node name="StartDisabledOverlay" type="Panel" parent="HUD/Root/Center" unique_id=454932394]
 modulate = Color(0, 0, 0, 0.57254905)
 layout_mode = 0
@@ -603,3 +649,5 @@ theme_override_colors/font_hover_pressed_color = Color(1, 1, 1, 0)
 theme_override_colors/font_disabled_color = Color(1, 1, 1, 0)
 theme_override_font_sizes/font_size = 21
 text = "FECHAR"
+
+[node name="API" type="HTTPRequest" parent="."]

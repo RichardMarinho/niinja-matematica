@@ -1,7 +1,7 @@
 extends Node2D
 
 @export var candy_scene: PackedScene
-@export_range(5.0, 120.0, 1.0) var round_seconds := 60.0
+@export_range(5.0, 180.0, 1.0) var round_seconds := 60.0
 @export_range(0.5, 5.0, 0.1) var spawn_interval := 1.9
 @export_range(24.0, 100.0, 2.0) var hammer_hit_radius := 58.0
 @export_range(0.0, 120.0, 5.0) var spawn_point_jitter := 35.0
@@ -18,12 +18,13 @@ const PRACTICE_SETS := {
 	"division": [["div_missing_1_10", "div_1_5", "div_1_10", "div_2", "div_3", "div_4", "div_5"], ["div_6", "div_7", "div_8", "div_9", "div_10"], ["div_11_12"], ["div_hard"]],
 }
 const OP_SYMBOLS := {"addition": "+", "subtraction": "−", "multiplication": "×", "division": "÷"}
+const MULTIPLICATION_UNLOCK_YEAR := 3
 const ROUND_TIME := 60.0
 const CANDIES_PER_WAVE := 4
 const DIFFICULTIES := {
-	"easy": {"title": "FÁCIL", "seconds": 60.0, "penalty": 1.0, "spawn": 3.8, "speed_min": 500.0, "speed_max": 550.0, "gravity_scale": 0.62, "tier": 0},
-	"normal": {"title": "NORMAL", "seconds": 60.0, "penalty": 3.0, "spawn": 3.3, "speed_min": 560.0, "speed_max": 610.0, "gravity_scale": 0.72, "tier": 1, "max_tier": 3},
-	"hard": {"title": "DIFÍCIL", "seconds": 60.0, "penalty": 5.0, "spawn": 3.0, "speed_min": 590.0, "speed_max": 670.0, "gravity_scale": 0.88, "tier": 2, "max_tier": 2},
+	"easy": {"title": "FÁCIL", "seconds": 75.0, "penalty": 1.0, "spawn": 3.3, "speed_min": 500.0, "speed_max": 590.0, "gravity_scale": 0.68, "tier": 0},
+	"normal": {"title": "NORMAL", "seconds": 60.0, "penalty": 3.0, "spawn": 3.0, "speed_min": 610.0, "speed_max": 710.0, "gravity_scale": 1.0, "tier": 1, "max_tier": 3},
+	"hard": {"title": "DIFÍCIL", "seconds": 45.0, "penalty": 5.0, "spawn": 1.9, "speed_min": 740.0, "speed_max": 860.0, "gravity_scale": 1.47, "tier": 2, "max_tier": 2},
 }
 
 @onready var candy_layer: Node2D = $CandyLayer
@@ -33,7 +34,17 @@ const DIFFICULTIES := {
 @onready var score_label: Label = $HUD/Root/TopBar/ScoreCard/Score
 @onready var timer_label: Label = $HUD/Root/TopBar/TimerCard/Timer
 @onready var equation_label: Label = $HUD/Root/EquationCard/Equation
+@onready var equation_ornaments: TextureRect = $HUD/Root/EquationCard/EquationOrnaments
+@onready var answer_feedback_label: Label = $HUD/Root/AnswerFeedback
 @onready var hint_label: Label = $HUD/Root/Hint
+@onready var static_answer_panel: Panel = $HUD/Root/StaticAnswerPanel
+@onready var static_answer_prompt: Label = $HUD/Root/StaticAnswerPanel/Prompt
+@onready var static_answer_buttons: Array[Button] = [
+	$HUD/Root/StaticAnswerPanel/Answer1,
+	$HUD/Root/StaticAnswerPanel/Answer2,
+	$HUD/Root/StaticAnswerPanel/Answer3,
+	$HUD/Root/StaticAnswerPanel/Answer4,
+]
 @onready var record_label: Label = $HUD/Root/TopBar/RecordCard/Record
 @onready var feedback_flash: ColorRect = $HUD/Root/FeedbackFlash
 @onready var pause_button: Button = $HUD/Root/TopBar/PauseButton
@@ -67,6 +78,7 @@ const DIFFICULTIES := {
 @onready var game_over_correct: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/CorrectValue
 @onready var game_over_attempts: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/AttemptsValue
 @onready var background: Sprite2D = $Background
+@onready var focus_background: ColorRect = $HUD/Root/FocusBackground
 @onready var retry_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/RetryButton
 @onready var game_over_exit_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/ExitButton
 
@@ -84,9 +96,13 @@ var spawn_clock := 0.0
 var combo := 0
 var game_running := false
 var request_pending := false
+var api_request_kind := ""
+var static_answer_mode_active := false
 var pointer_down := false
 var previous_pointer := Vector2.ZERO
 var active_question: Dictionary = {}
+var active_practice_set_candidates: Array[String] = []
+var attempted_practice_sets: Array[String] = []
 var local_mode := true
 var api_token := ""
 var attempts := 0
@@ -111,8 +127,12 @@ func _ready() -> void:
 		return
 	if OS.has_feature("web"):
 		waiting_for_accessibility_profile = _install_accessibility_bridge()
+		if waiting_for_accessibility_profile:
+			AudioManager.set_sfx_enabled(false)
 	_apply_gameplay_number_font()
 	api.request_completed.connect(_on_api_request_completed)
+	for index in range(static_answer_buttons.size()):
+		static_answer_buttons[index].pressed.connect(_on_static_answer_pressed.bind(index))
 	pause_button.pressed.connect(_open_pause)
 	resume_button.pressed.connect(_resume_game)
 	pause_options_button.pressed.connect(_show_pause_options)
@@ -172,6 +192,7 @@ func _ready() -> void:
 	pause_art.visible = true
 	pause_options_art.visible = false
 	game_over_overlay.visible = false
+	static_answer_panel.visible = false
 	round_seconds = float(difficulty.seconds)
 	spawn_interval = float(difficulty.spawn)
 	candy_launch_speed_min = float(difficulty.speed_min)
@@ -253,26 +274,46 @@ func _on_accessibility_profile_message(args: Array) -> void:
 
 func _apply_accessibility_profile() -> void:
 	AudioManager.set_sfx_enabled(bool(settings.sfx) and accessibility_profile.soundEffects == "on")
-	background.modulate = Color(0.55, 0.55, 0.55, 1.0) if accessibility_profile.focusMode else Color.WHITE
+	background.visible = not accessibility_profile.focusMode
+	focus_background.visible = accessibility_profile.focusMode
+	equation_ornaments.visible = not accessibility_profile.focusMode
+	if accessibility_profile.reducedMotion or accessibility_profile.focusMode:
+		if feedback_tween != null and feedback_tween.is_running():
+			feedback_tween.kill()
+		var material := feedback_flash.material as ShaderMaterial
+		if material != null:
+			material.set_shader_parameter("strength", 0.0)
 	_apply_accessibility_text_scale($HUD/Root, float(accessibility_profile.textScale))
 	if accessibility_profile.contrast == "high":
 		_set_label_contrast($HUD/Root)
 	else:
 		_clear_label_contrast($HUD/Root)
-	round_seconds = float(difficulty.seconds) * (1.5 if accessibility_profile.pace == "extended" else 1.0)
+	round_seconds = 160.0 if accessibility_profile.pace == "extended" else float(difficulty.seconds)
 	if not game_running:
 		remaining_time = round_seconds
+	var use_static_answers := bool(accessibility_profile.reducedMotion)
+	if use_static_answers != static_answer_mode_active:
+		static_answer_mode_active = use_static_answers
+		static_answer_panel.visible = false
+		candy_layer.visible = not use_static_answers
+		if use_static_answers:
+			for child in candy_layer.get_children():
+				child.queue_free()
+		if game_running and not active_question.is_empty():
+			if use_static_answers:
+				_spawn_static_answers()
+			else:
+				spawn_clock = 0.0
 	timer_label.visible = true
-	for child in candy_layer.get_children():
-		var candy := child as GaussCandy
-		if candy:
-			var still_answers: bool = accessibility_profile.pace == "untimed"
-			candy.set_physics_process(not still_answers)
-			candy.velocity = Vector2.ZERO if still_answers else Vector2(randf_range(-candy_horizontal_spread, candy_horizontal_spread), -randf_range(candy_launch_speed_min, candy_launch_speed_max))
-	if accessibility_profile.pace == "untimed":
-		hint_label.text = "Sem limite de tempo. Escolha um doce com clique/toque ou teclas 1 a 4."
-	elif accessibility_profile.preferredInput == "keyboard":
-		hint_label.text = "Use as teclas 1 a 4 para escolher um doce."
+	if accessibility_profile.reducedMotion:
+		var static_hint := "Toque ou clique no número certo."
+		if accessibility_profile.pace == "untimed":
+			static_hint = "Sem pressa! Toque ou clique no número certo."
+		hint_label.text = static_hint
+	elif accessibility_profile.pace == "untimed":
+		hint_label.text = "Sem pressa! Toque ou clique no doce com a resposta."
+	if not active_question.is_empty():
+		_update_answer_instructions()
 
 
 func _apply_accessibility_text_scale(node: Node, scale: float) -> void:
@@ -341,6 +382,8 @@ func start_round() -> void:
 	consecutive_wrong_answers = 0
 	game_running = true
 	request_pending = false
+	api_request_kind = ""
+	active_school_year = 0
 	active_question.clear()
 	_update_score()
 	_update_timer()
@@ -435,26 +478,29 @@ func _distance_to_segment(point: Vector2, start: Vector2, finish: Vector2) -> fl
 func _spawn_wave() -> void:
 	if active_question.is_empty():
 		return
+	if accessibility_profile.reducedMotion:
+		_spawn_static_answers()
+		return
 	var answers: Array[int] = _make_choices(_question_target(active_question))
 	var points := candy_spawn_points.get_children()
 	for index in range(answers.size()):
 		var spawn_point := points[index % points.size()] as Marker2D
 		var launch := Vector2(randf_range(-candy_horizontal_spread, candy_horizontal_spread), -randf_range(candy_launch_speed_min, candy_launch_speed_max))
 		var candy := candy_scene.instantiate() as GaussCandy
-		var still_answers: bool = accessibility_profile.pace == "untimed"
-		candy.setup(answers[index], 0 if accessibility_profile.reducedMotion else randi_range(0, 15), Vector2.ZERO if still_answers else launch)
+		candy.setup(answers[index], 0 if accessibility_profile.reducedMotion else randi_range(0, 15), launch)
 		candy.reduced_motion = bool(accessibility_profile.reducedMotion)
 		candy.fall_gravity *= float(difficulty.get("gravity_scale", 1.0))
-		candy.position = spawn_point.position + Vector2(randf_range(-spawn_point_jitter, spawn_point_jitter), 75.0 if still_answers else randf_range(50.0, 100.0))
-		candy.scale = Vector2.ONE if still_answers else Vector2.ONE * randf_range(0.91, 1.05)
+		candy.position = spawn_point.position + Vector2(randf_range(-spawn_point_jitter, spawn_point_jitter), randf_range(50.0, 100.0))
+		candy.scale = Vector2.ONE * randf_range(0.91, 1.05)
 		candy.smashed.connect(_on_candy_smashed)
 		candy_layer.add_child(candy)
-		if still_answers:
-			candy.set_physics_process(false)
 
 
 func _smash_answer_index(index: int) -> void:
 	if not game_running or request_pending:
+		return
+	if accessibility_profile.reducedMotion:
+		_on_static_answer_pressed(index)
 		return
 	var candies := candy_layer.get_children()
 	if index < 0 or index >= candies.size():
@@ -462,6 +508,33 @@ func _smash_answer_index(index: int) -> void:
 	var candy := candies[index] as GaussCandy
 	if candy and not candy.is_smashed:
 		candy.smash()
+
+
+func _spawn_static_answers() -> void:
+	if active_question.is_empty() or not accessibility_profile.reducedMotion or static_answer_panel.visible:
+		return
+	for child in candy_layer.get_children():
+		child.queue_free()
+	var answers := _make_choices(_question_target(active_question))
+	for index in range(static_answer_buttons.size()):
+		var answer_button := static_answer_buttons[index]
+		answer_button.text = str(answers[index])
+		answer_button.set_meta("answer_value", answers[index])
+		answer_button.disabled = false
+	static_answer_prompt.text = "Toque ou clique em uma resposta"
+	static_answer_panel.visible = true
+	spawn_clock = 3600.0
+
+
+func _on_static_answer_pressed(index: int) -> void:
+	if not accessibility_profile.reducedMotion or not static_answer_panel.visible:
+		return
+	if index < 0 or index >= static_answer_buttons.size():
+		return
+	var answer_button := static_answer_buttons[index]
+	if answer_button.disabled:
+		return
+	_submit_answer(int(answer_button.get_meta("answer_value", 0)), Vector2.ZERO)
 
 
 func _read_current_question() -> void:
@@ -486,25 +559,92 @@ func _make_choices(answer: int) -> Array[int]:
 
 func _request_next_question() -> void:
 	active_question.clear()
+	static_answer_panel.visible = false
 	if not selected_operations.is_empty():
 		selected_operation = selected_operations.pick_random()
-	request_pending = true
-	var starting_tier := int(difficulty.get("tier", 0))
-	var maximum_tier := int(difficulty.get("max_tier", 2))
-	var tier_index := mini(starting_tier + floori(float(score) / 240.0), maximum_tier)
-	var practice_set_pool: Array = PRACTICE_SETS[selected_operation][tier_index]
-	var practice_set: String = str(practice_set_pool.pick_random())
 	if local_mode:
 		game_running = false
 		equation_label.text = "Entre pelo Project Gauss para jogar."
 		hint_label.text = "A sessao autenticada e necessaria para buscar questoes e registrar seu progresso."
 		return
-	var query := "gameId=%s&operation=%s&practiceMode=free_practice&practiceSet=%s" % [game_id.uri_encode(), selected_operation, practice_set]
+	if active_school_year <= 0:
+		request_pending = true
+		api_request_kind = "school_year"
+		var headers := ["Authorization: Bearer %s" % api_token, "Accept: application/json"]
+		var year_error := api.request("%s/learning/lessons" % api_base_url, headers, HTTPClient.METHOD_GET)
+		if year_error != OK:
+			api_request_kind = ""
+			request_pending = false
+			retry_clock = 2.5
+		return
+	active_question = _build_generated_question()
+	_equation_for(active_question)
+	if accessibility_profile.reducedMotion:
+		_spawn_static_answers()
+	else:
+		_spawn_wave()
+	spawn_clock = spawn_interval
+	return
+	if not _request_question_for_next_practice_set():
+		game_running = false
+		equation_label.text = "Sem contas agora"
+		hint_label.text = "Ainda não há contas dessa operação para sua série."
+
+
+func _build_generated_question() -> Dictionary:
+	var base_min := 1
+	var base_max := 10
+	match selected_difficulty:
+		"normal":
+			base_min = 2
+			base_max = 25 + floori(float(score) / 240.0) * 10
+		"hard":
+			base_min = 10
+			base_max = 99 + floori(float(score) / 240.0) * 10
+	base_max = mini(base_max, 999)
+	var first := randi_range(base_min, base_max)
+	var second := randi_range(base_min, base_max)
+	if selected_operation == "subtraction" and first < second:
+		var swap := first
+		first = second
+		second = swap
+	elif selected_operation == "division":
+		# Forme o dividendo a partir do divisor e do quociente para nunca gerar resto.
+		second = randi_range(base_min, base_max)
+		var quotient := randi_range(base_min, base_max)
+		first = second * quotient
+	var operands: Array[int] = [first, second]
+	return {
+		"gameId": game_id,
+		"generated": true,
+		"operation": {
+			"kind": selected_operation,
+			"symbol": OP_SYMBOLS[selected_operation],
+			"operands": operands,
+			"operators": [selected_operation],
+		},
+	}
+
+
+func _request_question_for_next_practice_set() -> bool:
+	var next_practice_set := ""
+	for candidate in active_practice_set_candidates:
+		if not attempted_practice_sets.has(candidate):
+			next_practice_set = candidate
+			break
+	if next_practice_set.is_empty():
+		return false
+	attempted_practice_sets.append(next_practice_set)
+	var query := "gameId=%s&operation=%s&practiceMode=free_practice&practiceSet=%s" % [game_id.uri_encode(), selected_operation, next_practice_set.uri_encode()]
+	api_request_kind = "question"
+	request_pending = true
 	var headers := ["Authorization: Bearer %s" % api_token, "Accept: application/json"]
 	var error := api.request("%s/learning/games/next-question?%s" % [api_base_url, query], headers, HTTPClient.METHOD_GET)
 	if error != OK:
+		api_request_kind = ""
 		request_pending = false
 		retry_clock = 2.5
+	return true
 
 
 func _build_local_question(practice_set: String) -> Dictionary:
@@ -645,10 +785,18 @@ func _equation_for(question: Dictionary) -> void:
 
 
 func _update_answer_instructions() -> void:
-	var year_text := "%d ano · " % active_school_year if active_school_year > 0 else ""
-	var input_text := "toque ou clique" if accessibility_profile.preferredInput == "touch" else "clique/toque ou teclas 1 a 4, da esquerda para a direita"
-	var audio_text := " Pressione R para ouvir a conta." if accessibility_profile.audioAssistance else ""
-	hint_label.text = "%sescolha uma resposta com %s.%s" % [year_text, input_text, audio_text]
+	var input_text := "Toque ou clique no número certo."
+	if accessibility_profile.reducedMotion:
+		input_text = "Toque ou clique no número certo."
+	elif accessibility_profile.preferredInput == "touch":
+		input_text = "Toque no doce que tem a resposta."
+	else:
+		input_text = "Toque ou clique no doce com a resposta."
+	if accessibility_profile.pace == "untimed":
+		input_text = "Sem pressa! " + input_text
+	if accessibility_profile.audioAssistance:
+		input_text += " Aperte R para ouvir a conta."
+	hint_label.text = input_text
 
 
 func _question_target(question: Dictionary) -> int:
@@ -690,45 +838,57 @@ func _question_target(question: Dictionary) -> int:
 
 
 func _on_candy_smashed(candy: GaussCandy) -> void:
+	_submit_answer(candy.value, candy.global_position, candy)
+
+
+func _submit_answer(answer_value: int, hit_position: Vector2, selected_candy: GaussCandy = null) -> void:
 	if not game_running or request_pending:
 		return
-	_spawn_background_crack(candy.global_position)
+	answer_feedback_label.visible = false
+	if not accessibility_profile.reducedMotion:
+		_spawn_background_crack(hit_position)
 	request_pending = true
 	attempts += 1
 	for node in candy_layer.get_children():
 		var remaining_candy := node as GaussCandy
-		if remaining_candy and remaining_candy != candy:
+		if remaining_candy and remaining_candy != selected_candy:
 			if accessibility_profile.pace == "untimed":
 				remaining_candy.queue_free()
 			else:
 				remaining_candy.fall_away()
 	spawn_clock = maxf(spawn_clock, 0.85)
+	if accessibility_profile.reducedMotion:
+		_set_static_answer_buttons_disabled(true)
 	if local_mode:
-		_resolve_attempt(candy.value == _question_target(active_question), candy.value)
+		_resolve_attempt(answer_value == _question_target(active_question), answer_value)
 		return
 	pending_attempt = {
 		"eventId": _event_id(),
-		"type": "attempt_submitted",
-		"gameId": active_question.get("gameId", game_id),
-		"lessonId": active_question.get("lessonId", ""),
-		"lessonVersion": active_question.get("lessonVersion", 1),
-		"phaseId": active_question.get("phaseId", "practice"),
-		"exerciseId": active_question.get("exerciseId", ""),
-		"choice": candy.value,
+		"gameId": game_id,
+		"operation": str(active_question.operation.kind),
+		"operands": active_question.operation.operands,
+		"choice": answer_value,
 		"difficulty": selected_difficulty,
-		"practiceMode": "free_practice",
+		"score": score,
 		"occurredAt": Time.get_datetime_string_from_system(true),
 	}
 	_send_pending_attempt()
+
+
+func _set_static_answer_buttons_disabled(disabled: bool) -> void:
+	for answer_button in static_answer_buttons:
+		answer_button.disabled = disabled
 
 
 func _send_pending_attempt() -> void:
 	if pending_attempt.is_empty():
 		return
 	request_pending = true
+	api_request_kind = "generated_attempt"
 	var headers := ["Authorization: Bearer %s" % api_token, "Content-Type: application/json", "Accept: application/json"]
-	var error := api.request("%s/learning/attempts" % api_base_url, headers, HTTPClient.METHOD_POST, JSON.stringify(pending_attempt))
+	var error := api.request("%s/learning/games/generated-attempt" % api_base_url, headers, HTTPClient.METHOD_POST, JSON.stringify(pending_attempt))
 	if error != OK:
+		api_request_kind = ""
 		request_pending = false
 		retry_clock = 2.5
 
@@ -740,6 +900,8 @@ func _event_id() -> String:
 
 func _on_api_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
 	request_pending = false
+	var completed_request_kind := api_request_kind
+	api_request_kind = ""
 	var parsed: Variant = JSON.parse_string(_decode_response_body(body))
 	if result != HTTPRequest.RESULT_SUCCESS or response_code >= 500 or response_code == 0:
 		if not pending_attempt.is_empty():
@@ -752,33 +914,74 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 	if response_code < 200 or response_code >= 300:
 		if not pending_attempt.is_empty():
 			pending_attempt.clear()
+		if response_code == 404 and completed_request_kind == "question" and _request_question_for_next_practice_set():
+			return
 		game_running = false
-		equation_label.text = "Não foi possível carregar as contas da API."
-		hint_label.text = "Confira sua conta Project Gauss e tente novamente."
+		if response_code == 404:
+			equation_label.text = "Sem contas agora"
+			hint_label.text = "Ainda não há contas dessa operação para sua série."
+		else:
+			equation_label.text = "Não foi possível carregar as contas da API."
+			hint_label.text = "Confira sua sessão Project Gauss e tente novamente."
 		return
 	if not parsed is Dictionary:
 		game_running = false
 		equation_label.text = "A API enviou uma conta em formato inesperado."
 		return
+	if completed_request_kind == "school_year":
+		var received_year := int(parsed.get("schoolYear", 0))
+		if received_year < 1 or received_year > 12:
+			game_running = false
+			equation_label.text = "A API enviou uma série inválida."
+			hint_label.text = "A questão não foi iniciada sem uma série escolar válida."
+			return
+		active_school_year = received_year
+		if active_school_year < MULTIPLICATION_UNLOCK_YEAR:
+			selected_operations.erase("multiplication")
+			selected_operations.erase("division")
+			if selected_operations.is_empty():
+				selected_operations = ["addition"]
+			selected_operation = selected_operations.pick_random()
+		_request_next_question()
+		return
 	if parsed.has("correct"):
 		pending_attempt.clear()
 		_resolve_attempt(bool(parsed.correct), int(parsed.get("pointsDelta", 0)), true)
+		if not bool(parsed.correct) and accessibility_profile.reducedMotion:
+			_set_static_answer_buttons_disabled(false)
 		var feedback: Variant = parsed.get("feedback", {})
 		if not bool(parsed.correct) and feedback is Dictionary and not str(feedback.get("reason", "")).is_empty():
 			hint_label.text = str(feedback.reason)
 	else:
-		if not parsed.has("schoolYear"):
+		var required_question_fields := ["lessonId", "lessonVersion", "phaseId", "exerciseId", "gameId", "operation"]
+		for field in required_question_fields:
+			if not parsed.has(field):
+				game_running = false
+				equation_label.text = "A API enviou uma questão incompleta."
+				hint_label.text = "A questão não foi iniciada porque faltam dados oficiais para registrar sua resposta."
+				return
+		var received_operation: Variant = parsed.get("operation")
+		var received_lesson_version := int(parsed.get("lessonVersion", 0))
+		var received_ids := ["lessonId", "phaseId", "exerciseId", "gameId"]
+		for field in received_ids:
+			if str(parsed.get(field, "")).strip_edges().is_empty():
+				game_running = false
+				equation_label.text = "A API enviou uma questão incompleta."
+				hint_label.text = "Faltam identificadores oficiais para registrar esta resposta."
+				return
+		if received_lesson_version < 1 or not received_operation is Dictionary or not received_operation.get("operands", []) is Array or received_operation.operands.size() < 2:
 			game_running = false
-			equation_label.text = "A API nao informou a serie desta questao."
-			hint_label.text = "A questao nao foi iniciada sem uma serie validada."
+			equation_label.text = "A API enviou uma questão em formato inesperado."
+			hint_label.text = "A rodada não começou para evitar registrar uma resposta inválida."
 			return
+		answer_feedback_label.visible = false
 		active_question = parsed
-		active_school_year = int(parsed.schoolYear)
-		var operation: Dictionary = active_question.get("operation", {})
-		selected_operation = str(operation.get("kind", selected_operation))
+		selected_operation = str(received_operation.get("kind", selected_operation))
 		_equation_for(active_question)
 		hint_label.text = "Acerte um doce com o número!"
 		request_pending = false
+		if accessibility_profile.reducedMotion:
+			_spawn_static_answers()
 
 
 func _decode_response_body(body: PackedByteArray) -> String:
@@ -840,6 +1043,8 @@ func _windows_1252_codepoint(byte: int) -> int:
 func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) -> void:
 	request_pending = false
 	if is_correct:
+		answer_feedback_label.text = "ACERTOU!"
+		answer_feedback_label.add_theme_color_override("font_color", Color(0.65, 1.0, 0.62, 1.0))
 		consecutive_wrong_answers = 0
 		_flash_feedback(Color(0.12, 1.0, 0.24, 1.0))
 		AudioManager.play_correct()
@@ -858,6 +1063,8 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 		score += 10 + streak_bonus * 3
 		hint_label.text = "ACERTO! Sequencia %d!" % combo if accessibility_profile.pace == "untimed" else "ACERTO! Sequencia %d! +%ds de tempo!" % [combo, roundi(time_reward)]
 	else:
+		answer_feedback_label.text = "ERROU. Tente outra resposta."
+		answer_feedback_label.add_theme_color_override("font_color", Color(1.0, 0.68, 0.58, 1.0))
 		consecutive_wrong_answers += 1
 		_flash_feedback(Color(1.0, 0.12, 0.1, 1.0))
 		combo = 0
@@ -865,7 +1072,8 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 		if accessibility_profile.pace != "untimed":
 			var penalty := float(difficulty.get("penalty", 3.0))
 			remaining_time = maxf(0.0, remaining_time - penalty)
-		hint_label.text = "Ops! Esse não era o doce certo. Tente outro!"
+		hint_label.text = "Ainda não. Tente outra resposta!"
+	answer_feedback_label.visible = true
 	_update_score()
 	_update_timer()
 	if game_running and is_correct:
@@ -877,7 +1085,7 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 
 
 func _flash_feedback(flash_color: Color) -> void:
-	if accessibility_profile.reducedMotion:
+	if accessibility_profile.reducedMotion or accessibility_profile.focusMode:
 		return
 	var material := feedback_flash.material as ShaderMaterial
 	if material == null:
@@ -912,14 +1120,18 @@ func _update_record() -> void:
 
 
 func _update_timer() -> void:
+	var base_font_size := int(timer_label.get_meta("gauss_base_font_size", 18))
+	var accessibility_scale := float(accessibility_profile.textScale)
 	if accessibility_profile.pace == "untimed":
-		timer_label.text = "SEM TEMPO"
+		timer_label.text = "TEMPO: ∞"
+		timer_label.add_theme_font_size_override("font_size", maxi(12, roundi(float(base_font_size) * 1.35 * accessibility_scale)))
 		timer_label.modulate = Color.WHITE
 		return
+	timer_label.add_theme_font_size_override("font_size", maxi(12, roundi(float(base_font_size) * accessibility_scale)))
 	var seconds_to_display := int(ceil(remaining_time))
 	if round_seconds <= 60.0:
 		seconds_to_display -= 1
-	timer_label.text = "TEMPO: %02d" % clampi(seconds_to_display, 0, 99)
+	timer_label.text = "TEMPO: %d" % maxi(seconds_to_display, 0)
 	if remaining_time <= 10.0:
 		timer_label.modulate = Color(1.0, 0.35, 0.23)
 	else:
