@@ -31,6 +31,7 @@ const DIFFICULTIES := {
 @onready var crack_layer: Node2D = $CrackLayer
 @onready var candy_spawn_points: Node2D = $CandySpawnPoints
 @onready var api: HTTPRequest = $API
+@onready var equation_card: Panel = $HUD/Root/EquationCard
 @onready var score_label: Label = $HUD/Root/TopBar/ScoreCard/Score
 @onready var timer_label: Label = $HUD/Root/TopBar/TimerCard/Timer
 @onready var equation_label: Label = $HUD/Root/EquationCard/Equation
@@ -101,6 +102,8 @@ var static_answer_mode_active := false
 var pointer_down := false
 var previous_pointer := Vector2.ZERO
 var active_question: Dictionary = {}
+var active_answer_choices: Array[int] = []
+var next_question_voice_prefix := ""
 var active_practice_set_candidates: Array[String] = []
 var attempted_practice_sets: Array[String] = []
 var local_mode := true
@@ -128,18 +131,45 @@ func _ready() -> void:
 	if OS.has_feature("web"):
 		waiting_for_accessibility_profile = _install_accessibility_bridge()
 		if waiting_for_accessibility_profile:
-			AudioManager.set_sfx_enabled(false)
+			AudioManager.set_accessibility_sound_effects(false)
 	_apply_gameplay_number_font()
 	api.request_completed.connect(_on_api_request_completed)
+	equation_card.gui_input.connect(_on_equation_card_gui_input)
+	equation_card.mouse_entered.connect(_announce_equation_repeat_hint)
+	equation_card.mouse_exited.connect(AudioManager.stop_hover_speech.bind(equation_card))
+	equation_card.focus_mode = Control.FOCUS_ALL
+	equation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for index in range(static_answer_buttons.size()):
+		static_answer_buttons[index].mouse_entered.connect(_announce_static_answer_hover.bind(index))
+		static_answer_buttons[index].mouse_exited.connect(AudioManager.stop_hover_speech.bind(static_answer_buttons[index]))
+		static_answer_buttons[index].focus_entered.connect(_announce_static_answer_focus.bind(index))
 	for index in range(static_answer_buttons.size()):
 		static_answer_buttons[index].pressed.connect(_on_static_answer_pressed.bind(index))
 	pause_button.pressed.connect(_open_pause)
+	pause_button.mouse_entered.connect(_speak_game_button.bind("Botão para pausar o jogo.", pause_button))
+	pause_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(pause_button))
+	pause_button.focus_entered.connect(_speak_game_button.bind("Botão para pausar o jogo."))
 	resume_button.pressed.connect(_resume_game)
+	resume_button.mouse_entered.connect(_speak_game_button.bind("Continuar.", resume_button))
+	resume_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(resume_button))
+	resume_button.focus_entered.connect(_speak_game_button.bind("Continuar."))
 	pause_options_button.pressed.connect(_show_pause_options)
+	pause_options_button.mouse_entered.connect(_speak_game_button.bind("Opções.", pause_options_button))
+	pause_options_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(pause_options_button))
+	pause_options_button.focus_entered.connect(_speak_game_button.bind("Opções."))
 	pause_exit_button.pressed.connect(_exit_to_menu)
+	pause_exit_button.mouse_entered.connect(_speak_game_button.bind("Sair para o menu.", pause_exit_button))
+	pause_exit_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(pause_exit_button))
+	pause_exit_button.focus_entered.connect(_speak_game_button.bind("Sair para o menu."))
 	pause_options_back_button.pressed.connect(_show_pause_menu)
 	retry_button.pressed.connect(_retry_round)
+	retry_button.mouse_entered.connect(_speak_game_button.bind("Tentar novamente.", retry_button))
+	retry_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(retry_button))
+	retry_button.focus_entered.connect(_speak_game_button.bind("Tentar novamente."))
 	game_over_exit_button.pressed.connect(_exit_to_menu)
+	game_over_exit_button.mouse_entered.connect(_speak_game_button.bind("Sair para o menu.", game_over_exit_button))
+	game_over_exit_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(game_over_exit_button))
+	game_over_exit_button.focus_entered.connect(_speak_game_button.bind("Sair para o menu."))
 	var configured_url := ""
 	if OS.has_feature("web"):
 		# In the site iframe, reuse the student's existing session without putting
@@ -183,9 +213,24 @@ func _ready() -> void:
 	fullscreen_check.button_pressed = bool(settings.fullscreen)
 	_sync_pause_toggle_art()
 	music_check.toggled.connect(_pause_option_toggled.bind("music"))
+	music_check.mouse_entered.connect(_announce_pause_option_hover.bind("music", music_check))
+	music_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(music_check))
+	music_check.focus_entered.connect(_announce_pause_option_hover.bind("music"))
 	sfx_check.toggled.connect(_pause_option_toggled.bind("sfx"))
+	sfx_check.mouse_entered.connect(_announce_pause_option_hover.bind("sfx", sfx_check))
+	sfx_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(sfx_check))
+	sfx_check.focus_entered.connect(_announce_pause_option_hover.bind("sfx"))
 	hints_check.toggled.connect(_pause_option_toggled.bind("hints"))
+	hints_check.mouse_entered.connect(_announce_pause_option_hover.bind("hints", hints_check))
+	hints_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(hints_check))
+	hints_check.focus_entered.connect(_announce_pause_option_hover.bind("hints"))
 	fullscreen_check.toggled.connect(_pause_option_toggled.bind("fullscreen"))
+	fullscreen_check.mouse_entered.connect(_announce_pause_option_hover.bind("fullscreen", fullscreen_check))
+	fullscreen_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(fullscreen_check))
+	fullscreen_check.focus_entered.connect(_announce_pause_option_hover.bind("fullscreen"))
+	pause_options_back_button.mouse_entered.connect(_announce_pause_options_back_hover.bind(pause_options_back_button))
+	pause_options_back_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(pause_options_back_button))
+	pause_options_back_button.focus_entered.connect(_announce_pause_options_back_hover)
 	pause_overlay.visible = false
 	pause_menu.visible = true
 	pause_options.visible = false
@@ -259,6 +304,7 @@ func _on_accessibility_profile_message(args: Array) -> void:
 		if typeof(profile.get(field)) != TYPE_BOOL:
 			return
 	accessibility_profile = profile.duplicate(true)
+	AudioManager.set_accessibility_profile(accessibility_profile)
 	accessibility_profile_received = true
 	_apply_accessibility_profile()
 	if accessibility_profile.accessibleActivity == "react":
@@ -273,10 +319,13 @@ func _on_accessibility_profile_message(args: Array) -> void:
 
 
 func _apply_accessibility_profile() -> void:
-	AudioManager.set_sfx_enabled(bool(settings.sfx) and accessibility_profile.soundEffects == "on")
+	AudioManager.set_accessibility_sound_effects(accessibility_profile.soundEffects == "on")
+	AudioManager.set_sfx_enabled(bool(settings.sfx))
 	background.visible = not accessibility_profile.focusMode
 	focus_background.visible = accessibility_profile.focusMode
 	equation_ornaments.visible = not accessibility_profile.focusMode
+	if not accessibility_profile.audioAssistance:
+		_stop_current_reading()
 	if accessibility_profile.reducedMotion or accessibility_profile.focusMode:
 		if feedback_tween != null and feedback_tween.is_running():
 			feedback_tween.kill()
@@ -314,6 +363,8 @@ func _apply_accessibility_profile() -> void:
 		hint_label.text = "Sem pressa! Toque ou clique no doce com a resposta."
 	if not active_question.is_empty():
 		_update_answer_instructions()
+		if accessibility_profile.audioAssistance:
+			_read_current_question()
 
 
 func _apply_accessibility_text_scale(node: Node, scale: float) -> void:
@@ -385,6 +436,8 @@ func start_round() -> void:
 	api_request_kind = ""
 	active_school_year = 0
 	active_question.clear()
+	active_answer_choices.clear()
+	next_question_voice_prefix = ""
 	_update_score()
 	_update_timer()
 	_request_next_question()
@@ -481,18 +534,21 @@ func _spawn_wave() -> void:
 	if accessibility_profile.reducedMotion:
 		_spawn_static_answers()
 		return
-	var answers: Array[int] = _make_choices(_question_target(active_question))
+	if active_answer_choices.is_empty():
+		active_answer_choices = _make_choices(_question_target(active_question))
 	var points := candy_spawn_points.get_children()
-	for index in range(answers.size()):
+	for index in range(active_answer_choices.size()):
 		var spawn_point := points[index % points.size()] as Marker2D
 		var launch := Vector2(randf_range(-candy_horizontal_spread, candy_horizontal_spread), -randf_range(candy_launch_speed_min, candy_launch_speed_max))
 		var candy := candy_scene.instantiate() as GaussCandy
-		candy.setup(answers[index], 0 if accessibility_profile.reducedMotion else randi_range(0, 15), launch)
+		candy.setup(active_answer_choices[index], 0 if accessibility_profile.reducedMotion else randi_range(0, 15), launch)
 		candy.reduced_motion = bool(accessibility_profile.reducedMotion)
 		candy.fall_gravity *= float(difficulty.get("gravity_scale", 1.0))
 		candy.position = spawn_point.position + Vector2(randf_range(-spawn_point_jitter, spawn_point_jitter), randf_range(50.0, 100.0))
 		candy.scale = Vector2.ONE * randf_range(0.91, 1.05)
 		candy.smashed.connect(_on_candy_smashed)
+		candy.mouse_entered.connect(_announce_answer_value.bind(active_answer_choices[index], candy))
+		candy.mouse_exited.connect(AudioManager.stop_hover_speech.bind(candy))
 		candy_layer.add_child(candy)
 
 
@@ -515,11 +571,12 @@ func _spawn_static_answers() -> void:
 		return
 	for child in candy_layer.get_children():
 		child.queue_free()
-	var answers := _make_choices(_question_target(active_question))
+	if active_answer_choices.is_empty():
+		active_answer_choices = _make_choices(_question_target(active_question))
 	for index in range(static_answer_buttons.size()):
 		var answer_button := static_answer_buttons[index]
-		answer_button.text = str(answers[index])
-		answer_button.set_meta("answer_value", answers[index])
+		answer_button.text = str(active_answer_choices[index])
+		answer_button.set_meta("answer_value", active_answer_choices[index])
 		answer_button.disabled = false
 	static_answer_prompt.text = "Toque ou clique em uma resposta"
 	static_answer_panel.visible = true
@@ -537,12 +594,101 @@ func _on_static_answer_pressed(index: int) -> void:
 	_submit_answer(int(answer_button.get_meta("answer_value", 0)), Vector2.ZERO)
 
 
-func _read_current_question() -> void:
-	if not OS.has_feature("web") or active_question.is_empty():
+func _read_current_question(prefix := "") -> void:
+	if not accessibility_profile.audioAssistance or active_question.is_empty():
 		return
-	var spoken_question := str(active_question.get("accessibleDescription", active_question.get("prompt", equation_label.text)))
-	var text := JSON.stringify(spoken_question)
-	JavaScriptBridge.eval("if (window.speechSynthesis) { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(%s)); }" % text)
+	var spoken_question := _build_question_speech_text(prefix if not prefix.is_empty() else next_question_voice_prefix)
+	next_question_voice_prefix = ""
+	AudioManager.speak_accessibility(spoken_question, true)
+
+
+func _stop_current_reading() -> void:
+	AudioManager.stop_accessibility_speech()
+
+
+func _build_question_speech_text(prefix := "") -> String:
+	var pieces := PackedStringArray()
+	if not prefix.strip_edges().is_empty():
+		pieces.append(prefix.strip_edges())
+	pieces.append("Conta: %s." % _equation_for_speech())
+	if not active_answer_choices.is_empty():
+		var choices := PackedStringArray()
+		for answer in active_answer_choices:
+			choices.append(str(answer))
+		pieces.append("Opções: %s." % ", ".join(choices))
+	return " ".join(pieces)
+
+
+func _on_equation_card_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		equation_card.accept_event()
+		_read_current_question()
+	elif event is InputEventScreenTouch and event.pressed:
+		equation_card.accept_event()
+		_read_current_question()
+	elif event is InputEventKey and event.pressed and (event.keycode == KEY_ENTER or event.keycode == KEY_SPACE):
+		equation_card.accept_event()
+		_read_current_question()
+
+
+func _announce_equation_repeat_hint() -> void:
+	if active_question.is_empty():
+		return
+	AudioManager.speak_hover("Aperte mais uma vez para repetir a conta.", equation_card)
+
+
+func _announce_static_answer_hover(index: int) -> void:
+	if index >= 0 and index < static_answer_buttons.size():
+		_announce_answer_value(int(static_answer_buttons[index].get_meta("answer_value", 0)), static_answer_buttons[index])
+
+
+func _announce_static_answer_focus(index: int) -> void:
+	if index >= 0 and index < static_answer_buttons.size():
+		_announce_answer_value(int(static_answer_buttons[index].get_meta("answer_value", 0)))
+
+
+func _announce_answer_value(value: int, hover_source: Object = null) -> void:
+	if hover_source != null:
+		AudioManager.speak_hover("Opção, %d, clique para confirmar." % value, hover_source)
+	else:
+		AudioManager.speak_accessibility("Opção, %d, clique para confirmar." % value)
+
+
+func _speak_game_button(text: String, hover_source: Object = null) -> void:
+	if hover_source != null:
+		AudioManager.speak_hover(text, hover_source)
+	else:
+		AudioManager.speak_accessibility(text)
+
+
+func _equation_for_speech() -> String:
+	var operation: Dictionary = active_question.get("operation", {})
+	var operands: Array = operation.get("operands", [])
+	if operands.is_empty():
+		return equation_label.text
+	var operators: Array = operation.get("operators", [])
+	if operators.is_empty():
+		for _index in range(operands.size() - 1):
+			operators.append(operation.get("kind", selected_operation))
+	var spoken_operators := {"addition": "mais", "subtraction": "menos", "multiplication": "vezes", "division": "dividido por"}
+	var missing_index := int(operation.get("missingIndex", -1))
+	var parts := PackedStringArray()
+	for index in range(operands.size()):
+		if index == missing_index:
+			parts.append("qual número")
+		else:
+			parts.append(_speech_number(operands[index]))
+		if index < operators.size():
+			parts.append(str(spoken_operators.get(str(operators[index]), "")))
+	if missing_index >= 0:
+		return "%s é igual a %s." % [" ".join(parts), _speech_number(operation.get("result", ""))]
+	return "%s igual a qual número?" % " ".join(parts)
+
+
+func _speech_number(value: Variant) -> String:
+	if value is float and is_equal_approx(float(value), roundf(float(value))):
+		return str(roundi(float(value)))
+	return str(value)
 
 
 func _make_choices(answer: int) -> Array[int]:
@@ -558,8 +704,12 @@ func _make_choices(answer: int) -> Array[int]:
 
 
 func _request_next_question() -> void:
+	_stop_current_reading()
 	active_question.clear()
+	active_answer_choices.clear()
 	static_answer_panel.visible = false
+	for child in candy_layer.get_children():
+		child.queue_free()
 	if not selected_operations.is_empty():
 		selected_operation = selected_operations.pick_random()
 	if local_mode:
@@ -584,6 +734,7 @@ func _request_next_question() -> void:
 	else:
 		_spawn_wave()
 	spawn_clock = spawn_interval
+	_read_current_question()
 	return
 	if not _request_question_for_next_practice_set():
 		game_running = false
@@ -795,7 +946,7 @@ func _update_answer_instructions() -> void:
 	if accessibility_profile.pace == "untimed":
 		input_text = "Sem pressa! " + input_text
 	if accessibility_profile.audioAssistance:
-		input_text += " Aperte R para ouvir a conta."
+		input_text += " Clique uma vez na conta para ouvi-la de novo."
 	hint_label.text = input_text
 
 
@@ -976,12 +1127,17 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 			return
 		answer_feedback_label.visible = false
 		active_question = parsed
+		active_answer_choices.clear()
 		selected_operation = str(received_operation.get("kind", selected_operation))
 		_equation_for(active_question)
 		hint_label.text = "Acerte um doce com o número!"
 		request_pending = false
 		if accessibility_profile.reducedMotion:
 			_spawn_static_answers()
+		else:
+			_spawn_wave()
+		spawn_clock = spawn_interval
+		_read_current_question()
 
 
 func _decode_response_body(body: PackedByteArray) -> String:
@@ -1077,11 +1233,15 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 	_update_score()
 	_update_timer()
 	if game_running and is_correct:
+		next_question_voice_prefix = "Você acertou. Próxima conta."
 		_request_next_question()
 	elif game_running and consecutive_wrong_answers >= 3:
 		consecutive_wrong_answers = 0
 		hint_label.text = "Vamos trocar de conta!"
+		next_question_voice_prefix = "Você errou. Vamos trocar de conta."
 		_request_next_question()
+	elif game_running:
+		_read_current_question("Você errou.")
 
 
 func _flash_feedback(flash_color: Color) -> void:
@@ -1139,6 +1299,7 @@ func _update_timer() -> void:
 
 
 func _end_round() -> void:
+	_stop_current_reading()
 	game_running = false
 	remaining_time = 0.0
 	_update_timer()
@@ -1155,11 +1316,16 @@ func _end_round() -> void:
 	game_over_attempts.text = str(attempts)
 	game_over_overlay.visible = true
 	hint_label.text = "FIM DE JOGO"
+	AudioManager.speak_accessibility(
+		"O tempo acabou. Você marcou %d pontos e acertou %d contas." % [score, correct_attempts],
+		true
+	)
 
 
 func _open_pause() -> void:
 	if not game_running:
 		return
+	_stop_current_reading()
 	pause_menu.visible = true
 	pause_options.visible = false
 	pause_art.visible = true
@@ -1174,6 +1340,7 @@ func _resume_game() -> void:
 	pause_overlay.visible = false
 	get_tree().paused = false
 	AudioManager.play_ui()
+	AudioManager.speak_accessibility("Continuando o jogo.", true)
 
 
 func _show_pause_options() -> void:
@@ -1182,6 +1349,7 @@ func _show_pause_options() -> void:
 	pause_art.visible = false
 	pause_options_art.visible = true
 	AudioManager.play_ui()
+	AudioManager.speak_accessibility("Opções abertas.", true)
 
 
 func _show_pause_menu() -> void:
@@ -1200,7 +1368,7 @@ func _pause_option_toggled(enabled: bool, option_name: String) -> void:
 		settings[option_name] = enabled
 	match option_name:
 		"music": AudioManager.set_music_enabled(enabled)
-		"sfx": AudioManager.set_sfx_enabled(enabled and accessibility_profile.soundEffects == "on")
+		"sfx": AudioManager.set_sfx_enabled(enabled)
 		"fullscreen": AudioManager.set_fullscreen(enabled)
 	var config := ConfigFile.new()
 	config.load("user://ninja_matematica.cfg")
@@ -1208,6 +1376,27 @@ func _pause_option_toggled(enabled: bool, option_name: String) -> void:
 	config.save("user://ninja_matematica.cfg")
 	_sync_pause_toggle_art()
 	AudioManager.play_ui()
+	AudioManager.speak_option_state(option_name, enabled)
+
+
+func _announce_pause_option_hover(option_name: String, hover_source: Object = null) -> void:
+	var enabled := false
+	match option_name:
+		"music": enabled = music_check.button_pressed
+		"sfx": enabled = sfx_check.button_pressed
+		"hints": enabled = hints_check.button_pressed
+		"fullscreen": enabled = fullscreen_check.button_pressed
+	if hover_source != null:
+		AudioManager.speak_option_state(option_name, enabled, hover_source)
+	else:
+		AudioManager.speak_option_state(option_name, enabled)
+
+
+func _announce_pause_options_back_hover(hover_source: Object = null) -> void:
+	if hover_source != null:
+		AudioManager.speak_hover("Voltar ao menu da pausa.", hover_source)
+	else:
+		AudioManager.speak_accessibility("Voltar ao menu da pausa.")
 
 
 func _sync_pause_toggle_art() -> void:
@@ -1233,6 +1422,7 @@ func _retry_round() -> void:
 func _exit_to_menu() -> void:
 	get_tree().paused = false
 	AudioManager.play_ui()
+	AudioManager.speak_accessibility("Indo para o menu.", true)
 	SceneFlow.change_scene("res://scenes/menu.tscn")
 
 

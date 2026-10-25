@@ -43,26 +43,100 @@ var selected_operations: Array[String] = []
 var api_token := ""
 var active_school_year := 0
 var school_year_load_failed := false
+var suppress_operation_speech := false
+var preparation_intro_spoken := false
 
 
 func _ready() -> void:
 	if not SceneFlow.enter_scene_from_menu():
 		return
+	AudioManager.accessibility_profile_updated.connect(_on_accessibility_profile_updated)
 	api.request_completed.connect(_on_school_year_loaded)
 	help_overlay.visible = false
 	easy_button.pressed.connect(_select_difficulty.bind("easy"))
+	easy_button.mouse_entered.connect(_speak_difficulty_hover.bind("easy", easy_button))
+	easy_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(easy_button))
 	normal_button.pressed.connect(_select_difficulty.bind("normal"))
+	normal_button.mouse_entered.connect(_speak_difficulty_hover.bind("normal", normal_button))
+	normal_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(normal_button))
 	hard_button.pressed.connect(_select_difficulty.bind("hard"))
+	hard_button.mouse_entered.connect(_speak_difficulty_hover.bind("hard", hard_button))
+	hard_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(hard_button))
 	addition_check.toggled.connect(_operation_toggled.bind("addition"))
+	addition_check.mouse_entered.connect(_speak_operation_hover.bind("addition", addition_check))
+	addition_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(addition_check))
 	subtraction_check.toggled.connect(_operation_toggled.bind("subtraction"))
+	subtraction_check.mouse_entered.connect(_speak_operation_hover.bind("subtraction", subtraction_check))
+	subtraction_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(subtraction_check))
 	multiplication_check.toggled.connect(_operation_toggled.bind("multiplication"))
+	multiplication_check.mouse_entered.connect(_speak_operation_hover.bind("multiplication", multiplication_check))
+	multiplication_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(multiplication_check))
 	division_check.toggled.connect(_operation_toggled.bind("division"))
+	division_check.mouse_entered.connect(_speak_operation_hover.bind("division", division_check))
+	division_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(division_check))
 	back_button.pressed.connect(_back_to_menu)
+	back_button.mouse_entered.connect(_speak_accessibility_text.bind("Voltar ao menu.", back_button))
+	back_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(back_button))
 	start_button.pressed.connect(_start_game)
+	start_button.mouse_entered.connect(_on_start_hovered.bind(start_button))
+	start_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(start_button))
 	help_button.pressed.connect(_open_difficulty_help)
+	help_button.mouse_entered.connect(_speak_accessibility_text.bind("Ajuda sobre os níveis de dificuldade.", help_button))
+	help_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(help_button))
 	help_close_button.pressed.connect(_close_difficulty_help)
+	help_close_button.mouse_entered.connect(_speak_accessibility_text.bind("Fechar ajuda.", help_close_button))
+	help_close_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(help_close_button))
 	_apply_operation_access()
 	_request_school_year()
+	call_deferred("_speak_preparation_intro")
+
+
+func _on_accessibility_profile_updated() -> void:
+	_speak_preparation_intro()
+
+
+func _speak_preparation_intro() -> void:
+	if preparation_intro_spoken or not AudioManager.is_audio_assistance_enabled():
+		return
+	preparation_intro_spoken = true
+	AudioManager.speak_accessibility("Você precisa selecionar uma dificuldade e pelo menos uma operação.", true)
+
+
+func _speak_accessibility_text(text: String, hover_source: Object = null) -> void:
+	if hover_source != null:
+		AudioManager.speak_hover(text, hover_source)
+	else:
+		AudioManager.speak_accessibility(text)
+
+
+func _speak_difficulty_hover(difficulty: String, hover_source: Object = null) -> void:
+	if hover_source != null:
+		AudioManager.speak_hover("Dificuldade %s." % _difficulty_name(difficulty), hover_source)
+	else:
+		AudioManager.speak_accessibility("Dificuldade %s." % _difficulty_name(difficulty))
+
+
+func _speak_operation_hover(operation: String, hover_source: Object = null) -> void:
+	var button := _operation_button(operation)
+	if button == null or button.disabled:
+		return
+	if hover_source != null:
+		AudioManager.speak_hover(_operation_name(operation) + ".", hover_source)
+	else:
+		AudioManager.speak_accessibility(_operation_name(operation) + ".")
+
+
+func _on_start_hovered(hover_source: Object = null) -> void:
+	if start_button.disabled:
+		if hover_source != null:
+			AudioManager.speak_hover("Você precisa selecionar uma dificuldade e pelo menos uma operação.", hover_source)
+		else:
+			AudioManager.speak_accessibility("Você precisa selecionar uma dificuldade e pelo menos uma operação.")
+	else:
+		if hover_source != null:
+			AudioManager.speak_hover("Começar.", hover_source)
+		else:
+			AudioManager.speak_accessibility("Começar.")
 
 
 func _request_school_year() -> void:
@@ -103,6 +177,7 @@ func _on_school_year_loaded(result: int, response_code: int, _headers: PackedStr
 
 
 func _apply_operation_access() -> void:
+	suppress_operation_speech = true
 	var operations_unlocked := active_school_year >= MULTIPLICATION_UNLOCK_YEAR
 	multiplication_check.disabled = not operations_unlocked
 	division_check.disabled = not operations_unlocked
@@ -121,6 +196,7 @@ func _apply_operation_access() -> void:
 	division_lock.tooltip_text = "Entre pelo Project Gauss para confirmar a série." if school_year_load_failed else "Divisão liberada a partir do 3º ano."
 	_sync_operation_switch_art()
 	_refresh_start_button()
+	suppress_operation_speech = false
 
 
 func _open_difficulty_help() -> void:
@@ -141,6 +217,7 @@ func _select_difficulty(difficulty: String) -> void:
 			button.button_pressed = _difficulty_id(button.name) == difficulty
 			button.modulate = Color(1.0, 0.78, 0.33) if button.button_pressed else Color.WHITE
 	AudioManager.play_ui()
+	AudioManager.speak_accessibility("Dificuldade %s selecionada." % _difficulty_name(difficulty))
 	_refresh_start_button()
 
 
@@ -157,9 +234,30 @@ func _operation_toggled(checked: bool, operation: String) -> void:
 		selected_operations.append(operation)
 	elif not checked:
 		selected_operations.erase(operation)
-	AudioManager.play_ui()
+	if not suppress_operation_speech:
+		AudioManager.play_ui()
+		var state := "ativadas" if checked else "desativadas"
+		AudioManager.speak_accessibility("As contas de %s foram %s." % [_operation_name(operation), state])
 	_sync_operation_switch_art()
 	_refresh_start_button()
+
+
+func _operation_name(operation: String) -> String:
+	match operation:
+		"addition": return "adição"
+		"subtraction": return "subtração"
+		"multiplication": return "multiplicação"
+		"division": return "divisão"
+	return "operação"
+
+
+func _operation_button(operation: String) -> CheckButton:
+	match operation:
+		"addition": return addition_check
+		"subtraction": return subtraction_check
+		"multiplication": return multiplication_check
+		"division": return division_check
+	return null
 
 
 func _sync_operation_switch_art() -> void:

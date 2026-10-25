@@ -7,7 +7,7 @@
 radius = 54.0
 
 [node name="Candy" type="Area2D"]
-collision_layer = 0
+collision_layer = 1
 collision_mask = 0
 script = ExtResource("2_script")
 

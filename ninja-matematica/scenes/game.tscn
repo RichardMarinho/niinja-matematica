@@ -337,7 +337,7 @@ offset_top = 86.0
 offset_right = -320.0
 offset_bottom = 166.0
 grow_horizontal = 2
-mouse_filter = 2
+mouse_filter = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
 [node name="EquationOrnaments" type="TextureRect" parent="HUD/Root/EquationCard" unique_id=1343092377]
