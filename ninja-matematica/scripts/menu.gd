@@ -6,6 +6,9 @@ extends Node2D
 
 
 func _ready() -> void:
+	if OS.has_feature("web") and bool(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('practiceMode') === 'lesson'")):
+		SceneFlow.call_deferred("change_scene", "res://scenes/game.tscn")
+		return
 	SceneFlow.entered_menu()
 	play_button.pressed.connect(_open_preparation)
 	play_button.mouse_entered.connect(_speak_accessibility_text.bind("Jogar. Botão para começar o jogo.", play_button))

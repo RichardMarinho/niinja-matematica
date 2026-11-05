@@ -83,6 +83,14 @@ const DIFFICULTIES := {
 @onready var retry_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/RetryButton
 @onready var game_over_exit_button: Button = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/ExitButton
 
+var lesson_mode := false
+var lesson_code := ""
+var lesson_version := 0
+var lesson_phase := ""
+var lesson_exercise := ""
+var lesson_operation := "mixed"
+var lesson_goal := 0
+var lesson_correct := 0
 var selected_operation := "multiplication"
 var selected_operations: Array[String] = []
 var selected_difficulty := "normal"
@@ -172,6 +180,14 @@ func _ready() -> void:
 	game_over_exit_button.focus_entered.connect(_speak_game_button.bind("Sair para o menu."))
 	var configured_url := ""
 	if OS.has_feature("web"):
+		lesson_mode = bool(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('practiceMode') === 'lesson'"))
+		if lesson_mode:
+			lesson_code = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('lessonCode') || ''"))
+			lesson_version = int(JavaScriptBridge.eval("Number(new URLSearchParams(window.location.search).get('lessonVersion') || 0)"))
+			lesson_phase = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('phaseId') || ''"))
+			lesson_exercise = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('exerciseId') || ''"))
+			lesson_operation = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('operation') || 'mixed'"))
+			lesson_goal = int(JavaScriptBridge.eval("Number(new URLSearchParams(window.location.search).get('questionGoal') || 0)"))
 		# In the site iframe, reuse the student's existing session without putting
 		# the token in the game URL or asking the student to sign in again.
 		api_token = str(JavaScriptBridge.eval("(function(){try{return window.parent.__GAUSS_STUDENT_TOKEN__ || localStorage.getItem('gauss.student.session') || '';}catch(e){return localStorage.getItem('gauss.student.session') || '';}})()")).strip_edges()
@@ -528,6 +544,17 @@ func _distance_to_segment(point: Vector2, start: Vector2, finish: Vector2) -> fl
 	return point.distance_to(start + segment * projection)
 
 
+func _answer_choices_for_question() -> Array[int]:
+	if bool(active_question.get("promptOnly", false)):
+		var choices: Array[int] = []
+		for value in active_question.get("choices", []):
+			if value is int or value is float:
+				choices.append(int(value))
+		if choices.size() >= 2 and choices.size() <= static_answer_buttons.size():
+			return choices
+	return _make_choices(_question_target(active_question))
+
+
 func _spawn_wave() -> void:
 	if active_question.is_empty():
 		return
@@ -535,7 +562,7 @@ func _spawn_wave() -> void:
 		_spawn_static_answers()
 		return
 	if active_answer_choices.is_empty():
-		active_answer_choices = _make_choices(_question_target(active_question))
+		active_answer_choices = _answer_choices_for_question()
 	var points := candy_spawn_points.get_children()
 	for index in range(active_answer_choices.size()):
 		var spawn_point := points[index % points.size()] as Marker2D
@@ -572,9 +599,12 @@ func _spawn_static_answers() -> void:
 	for child in candy_layer.get_children():
 		child.queue_free()
 	if active_answer_choices.is_empty():
-		active_answer_choices = _make_choices(_question_target(active_question))
+		active_answer_choices = _answer_choices_for_question()
 	for index in range(static_answer_buttons.size()):
 		var answer_button := static_answer_buttons[index]
+		answer_button.visible = index < active_answer_choices.size()
+		if not answer_button.visible:
+			continue
 		answer_button.text = str(active_answer_choices[index])
 		answer_button.set_meta("answer_value", active_answer_choices[index])
 		answer_button.disabled = false
@@ -610,7 +640,7 @@ func _build_question_speech_text(prefix := "") -> String:
 	var pieces := PackedStringArray()
 	if not prefix.strip_edges().is_empty():
 		pieces.append(prefix.strip_edges())
-	pieces.append("Conta: %s." % _equation_for_speech())
+	pieces.append(str(active_question.get("prompt", "")) if bool(active_question.get("promptOnly", false)) else "Conta: %s." % _equation_for_speech())
 	if not active_answer_choices.is_empty():
 		var choices := PackedStringArray()
 		for answer in active_answer_choices:
@@ -716,6 +746,23 @@ func _request_next_question() -> void:
 		game_running = false
 		equation_label.text = "Entre pelo Project Gauss para jogar."
 		hint_label.text = "A sessao autenticada e necessaria para buscar questoes e registrar seu progresso."
+		return
+	if lesson_mode:
+		if lesson_code.is_empty() or lesson_phase.is_empty() or lesson_version < 1 or lesson_goal < 1:
+			game_running = false
+			equation_label.text = "Não foi possível identificar a etapa da aula."
+			return
+		var query := "gameId=%s&operation=%s&practiceMode=lesson&lessonCode=%s&lessonVersion=%d&phaseId=%s" % [game_id.uri_encode(), lesson_operation.uri_encode(), lesson_code.uri_encode(), lesson_version, lesson_phase.uri_encode()]
+		if not lesson_exercise.is_empty():
+			query += "&exerciseId=" + lesson_exercise.uri_encode()
+		api_request_kind = "question"
+		request_pending = true
+		var headers := ["Authorization: Bearer %s" % api_token, "Accept: application/json"]
+		var error := api.request("%s/learning/games/next-question?%s" % [api_base_url, query], headers, HTTPClient.METHOD_GET)
+		if error != OK:
+			request_pending = false
+			api_request_kind = ""
+			retry_clock = 2.5
 		return
 	if active_school_year <= 0:
 		request_pending = true
@@ -908,6 +955,10 @@ func _build_local_question(practice_set: String) -> Dictionary:
 
 
 func _equation_for(question: Dictionary) -> void:
+	if bool(question.get("promptOnly", false)):
+		equation_label.text = "Leia a pergunta acima"
+		call_deferred("_update_answer_instructions")
+		return
 	var operation: Dictionary = question.get("operation", {})
 	var operands: Array = operation.get("operands", [])
 	var operators: Array = operation.get("operators", [])
@@ -955,6 +1006,14 @@ func _question_target(question: Dictionary) -> int:
 	var operands: Array = operation.get("operands", [])
 	var missing_index := int(operation.get("missingIndex", -1))
 	if missing_index >= 0 and missing_index < operands.size():
+		if bool(operation.get("hiddenOperand", false)) and operands.size() == 2:
+			var known := float(operands[1 - missing_index])
+			var result := float(operation.get("result", 0))
+			match str(operation.get("kind", "")):
+				"addition": return roundi(result - known)
+				"subtraction": return roundi(result + known if missing_index == 0 else known - result)
+				"multiplication": return roundi(result / known) if not is_zero_approx(known) else 0
+				"division": return roundi(result * known if missing_index == 0 else known / result) if not is_zero_approx(result) else 0
 		return int(operands[missing_index])
 	if operands.is_empty():
 		return int(question.get("answer", 0))
@@ -1013,6 +1072,16 @@ func _submit_answer(answer_value: int, hit_position: Vector2, selected_candy: Ga
 	if local_mode:
 		_resolve_attempt(answer_value == _question_target(active_question), answer_value)
 		return
+	if lesson_mode:
+		pending_attempt = {
+			"eventId": _event_id(), "type": "attempt_submitted", "gameId": game_id,
+			"lessonId": active_question.lessonId, "lessonVersion": active_question.lessonVersion,
+			"phaseId": active_question.phaseId, "exerciseId": active_question.exerciseId,
+			"choice": answer_value, "practiceMode": "lesson",
+			"occurredAt": Time.get_datetime_string_from_system(true) + "Z",
+		}
+		_send_pending_attempt()
+		return
 	pending_attempt = {
 		"eventId": _event_id(),
 		"gameId": game_id,
@@ -1035,9 +1104,10 @@ func _send_pending_attempt() -> void:
 	if pending_attempt.is_empty():
 		return
 	request_pending = true
-	api_request_kind = "generated_attempt"
+	api_request_kind = "attempt" if lesson_mode else "generated_attempt"
 	var headers := ["Authorization: Bearer %s" % api_token, "Content-Type: application/json", "Accept: application/json"]
-	var error := api.request("%s/learning/games/generated-attempt" % api_base_url, headers, HTTPClient.METHOD_POST, JSON.stringify(pending_attempt))
+	var endpoint := "/learning/attempts" if lesson_mode else "/learning/games/generated-attempt"
+	var error := api.request("%s%s" % [api_base_url, endpoint], headers, HTTPClient.METHOD_POST, JSON.stringify(pending_attempt))
 	if error != OK:
 		api_request_kind = ""
 		request_pending = false
@@ -1127,6 +1197,9 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 			return
 		answer_feedback_label.visible = false
 		active_question = parsed
+		if lesson_mode and OS.has_feature("web"):
+			var message := {"type": "gauss-ninja-question", "lessonCode": lesson_code, "lessonVersion": lesson_version, "phaseId": lesson_phase, "prompt": str(parsed.get("prompt", ""))}
+			JavaScriptBridge.eval("window.parent.postMessage(%s, window.location.origin)" % JSON.stringify(message))
 		active_answer_choices.clear()
 		selected_operation = str(received_operation.get("kind", selected_operation))
 		_equation_for(active_question)
@@ -1232,6 +1305,14 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 	answer_feedback_label.visible = true
 	_update_score()
 	_update_timer()
+	if lesson_mode and is_correct:
+		lesson_correct += 1
+		if lesson_correct >= lesson_goal:
+			game_running = false
+			equation_label.text = "Contas concluídas!"
+			hint_label.text = "Continue na aula."
+			JavaScriptBridge.eval("window.parent.postMessage({type:'gauss-ninja-phase-completed',lessonCode:new URLSearchParams(location.search).get('lessonCode'),lessonVersion:Number(new URLSearchParams(location.search).get('lessonVersion')),phaseId:new URLSearchParams(location.search).get('phaseId')},location.origin)")
+			return
 	if game_running and is_correct:
 		next_question_voice_prefix = "Você acertou. Próxima conta."
 		_request_next_question()
