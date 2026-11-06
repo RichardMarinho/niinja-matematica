@@ -87,6 +87,7 @@ var lesson_mode := false
 var lesson_code := ""
 var lesson_version := 0
 var lesson_phase := ""
+var classroom_session_id := ""
 var lesson_exercise := ""
 var lesson_operation := "mixed"
 var lesson_goal := 0
@@ -185,6 +186,7 @@ func _ready() -> void:
 			lesson_code = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('lessonCode') || ''"))
 			lesson_version = int(JavaScriptBridge.eval("Number(new URLSearchParams(window.location.search).get('lessonVersion') || 0)"))
 			lesson_phase = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('phaseId') || ''"))
+			classroom_session_id = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('classroomSessionId') || ''"))
 			lesson_exercise = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('exerciseId') || ''"))
 			lesson_operation = str(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('operation') || 'mixed'"))
 			lesson_goal = int(JavaScriptBridge.eval("Number(new URLSearchParams(window.location.search).get('questionGoal') || 0)"))
@@ -753,6 +755,8 @@ func _request_next_question() -> void:
 			equation_label.text = "Não foi possível identificar a etapa da aula."
 			return
 		var query := "gameId=%s&operation=%s&practiceMode=lesson&lessonCode=%s&lessonVersion=%d&phaseId=%s" % [game_id.uri_encode(), lesson_operation.uri_encode(), lesson_code.uri_encode(), lesson_version, lesson_phase.uri_encode()]
+		if not classroom_session_id.is_empty():
+			query += "&classroomSessionId=" + classroom_session_id.uri_encode()
 		if not lesson_exercise.is_empty():
 			query += "&exerciseId=" + lesson_exercise.uri_encode()
 		api_request_kind = "question"
@@ -1080,6 +1084,8 @@ func _submit_answer(answer_value: int, hit_position: Vector2, selected_candy: Ga
 			"choice": answer_value, "practiceMode": "lesson",
 			"occurredAt": Time.get_datetime_string_from_system(true) + "Z",
 		}
+		if not classroom_session_id.is_empty():
+			pending_attempt["classroomSessionId"] = classroom_session_id
 		_send_pending_attempt()
 		return
 	pending_attempt = {
@@ -1311,7 +1317,7 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 			game_running = false
 			equation_label.text = "Contas concluídas!"
 			hint_label.text = "Continue na aula."
-			JavaScriptBridge.eval("window.parent.postMessage({type:'gauss-ninja-phase-completed',lessonCode:new URLSearchParams(location.search).get('lessonCode'),lessonVersion:Number(new URLSearchParams(location.search).get('lessonVersion')),phaseId:new URLSearchParams(location.search).get('phaseId')},location.origin)")
+			JavaScriptBridge.eval("window.parent.postMessage({type:'gauss-ninja-phase-completed',lessonCode:new URLSearchParams(location.search).get('lessonCode'),lessonVersion:Number(new URLSearchParams(location.search).get('lessonVersion')),phaseId:new URLSearchParams(location.search).get('phaseId'),classroomSessionId:new URLSearchParams(location.search).get('classroomSessionId') || ''},location.origin)")
 			return
 	if game_running and is_correct:
 		next_question_voice_prefix = "Você acertou. Próxima conta."
