@@ -100,7 +100,6 @@ var pointer_down := false
 var previous_pointer := Vector2.ZERO
 var active_question: Dictionary = {}
 var active_answer_choices: Array[int] = []
-var next_question_voice_prefix := ""
 var active_practice_set_candidates: Array[String] = []
 var attempted_practice_sets: Array[String] = []
 var local_mode := true
@@ -145,12 +144,8 @@ func _ready() -> void:
 	api.request_completed.connect(_on_api_request_completed)
 	api.timeout = 15.0
 	pause_overlay.cancelled.connect(_on_pause_cancel)
-	equation_card.gui_input.connect(_on_equation_card_gui_input)
-	equation_card.focus_entered.connect(_announce_equation_focus)
-	equation_card.mouse_entered.connect(_announce_equation_repeat_hint)
-	equation_card.mouse_exited.connect(AudioManager.stop_hover_speech.bind(equation_card))
 	equation_card.focus_mode = Control.FOCUS_ALL
-	equation_card.accessibility_name = "Pergunta. Pressione Enter para repetir a pergunta."
+	equation_card.accessibility_name = "Pergunta"
 	equation_normal_style = equation_card.get_theme_stylebox("panel")
 	var focus_style := StyleBoxFlat.new()
 	focus_style.bg_color = Color(0, 0, 0, 0)
@@ -168,36 +163,14 @@ func _ready() -> void:
 	_refresh_gameplay_focus(null)
 	equation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for index in range(static_answer_buttons.size()):
-		static_answer_buttons[index].mouse_entered.connect(_announce_static_answer_hover.bind(index))
-		static_answer_buttons[index].mouse_exited.connect(AudioManager.stop_hover_speech.bind(static_answer_buttons[index]))
-		static_answer_buttons[index].focus_entered.connect(_announce_static_answer_focus.bind(index))
-	for index in range(static_answer_buttons.size()):
 		static_answer_buttons[index].pressed.connect(_on_static_answer_pressed.bind(index))
 	pause_button.pressed.connect(_open_pause)
-	pause_button.mouse_entered.connect(_speak_game_button.bind("Botão para pausar o jogo.", pause_button))
-	pause_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(pause_button))
-	pause_button.focus_entered.connect(_speak_game_button.bind("Botão para pausar o jogo."))
 	resume_button.pressed.connect(_resume_game)
-	resume_button.mouse_entered.connect(_speak_game_button.bind("Continuar.", resume_button))
-	resume_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(resume_button))
-	resume_button.focus_entered.connect(_speak_game_button.bind("Continuar."))
 	pause_options_button.pressed.connect(_show_pause_options)
-	pause_options_button.mouse_entered.connect(_speak_game_button.bind("Opções.", pause_options_button))
-	pause_options_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(pause_options_button))
-	pause_options_button.focus_entered.connect(_speak_game_button.bind("Opções."))
 	pause_exit_button.pressed.connect(_exit_to_menu)
-	pause_exit_button.mouse_entered.connect(_speak_game_button.bind("Sair para o menu.", pause_exit_button))
-	pause_exit_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(pause_exit_button))
-	pause_exit_button.focus_entered.connect(_speak_game_button.bind("Sair para o menu."))
 	pause_options_back_button.pressed.connect(_show_pause_menu)
 	retry_button.pressed.connect(_retry_round)
-	retry_button.mouse_entered.connect(_speak_game_button.bind("Tentar novamente.", retry_button))
-	retry_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(retry_button))
-	retry_button.focus_entered.connect(_speak_game_button.bind("Tentar novamente."))
 	game_over_exit_button.pressed.connect(_exit_to_menu)
-	game_over_exit_button.mouse_entered.connect(_speak_game_button.bind("Sair para o menu.", game_over_exit_button))
-	game_over_exit_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(game_over_exit_button))
-	game_over_exit_button.focus_entered.connect(_speak_game_button.bind("Sair para o menu."))
 	var configured_url := ""
 	if OS.has_feature("web"):
 		lesson_mode = bool(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('practiceMode') === 'lesson'"))
@@ -249,24 +222,9 @@ func _ready() -> void:
 	hints_check.button_pressed = bool(settings.show_hints)
 	fullscreen_check.button_pressed = bool(settings.fullscreen)
 	music_check.toggled.connect(_pause_option_toggled.bind("music"))
-	music_check.mouse_entered.connect(_announce_pause_option_hover.bind("music", music_check))
-	music_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(music_check))
-	music_check.focus_entered.connect(_announce_pause_option_hover.bind("music"))
 	sfx_check.toggled.connect(_pause_option_toggled.bind("sfx"))
-	sfx_check.mouse_entered.connect(_announce_pause_option_hover.bind("sfx", sfx_check))
-	sfx_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(sfx_check))
-	sfx_check.focus_entered.connect(_announce_pause_option_hover.bind("sfx"))
 	hints_check.toggled.connect(_pause_option_toggled.bind("hints"))
-	hints_check.mouse_entered.connect(_announce_pause_option_hover.bind("hints", hints_check))
-	hints_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(hints_check))
-	hints_check.focus_entered.connect(_announce_pause_option_hover.bind("hints"))
 	fullscreen_check.toggled.connect(_pause_option_toggled.bind("fullscreen"))
-	fullscreen_check.mouse_entered.connect(_announce_pause_option_hover.bind("fullscreen", fullscreen_check))
-	fullscreen_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(fullscreen_check))
-	fullscreen_check.focus_entered.connect(_announce_pause_option_hover.bind("fullscreen"))
-	pause_options_back_button.mouse_entered.connect(_announce_pause_options_back_hover.bind(pause_options_back_button))
-	pause_options_back_button.mouse_exited.connect(AudioManager.stop_hover_speech.bind(pause_options_back_button))
-	pause_options_back_button.focus_entered.connect(_announce_pause_options_back_hover)
 	pause_overlay.visible = false
 	pause_menu.visible = true
 	pause_options.visible = false
@@ -286,6 +244,7 @@ func _ready() -> void:
 	trophies.load_summary(api_base_url, api_token)
 	if local_mode:
 		equation_label.text = "Entre pelo Project Gauss para jogar."
+		equation_card.accessibility_name = "Pergunta: " + equation_label.text
 		hint_label.text = "Abra o jogo pela sua atividade no site."
 		hint_label.visible = true
 		return
@@ -297,6 +256,7 @@ func _ready() -> void:
 
 func _show_waiting_for_challenge() -> void:
 	equation_label.text = "Preparando seu desafio..."
+	equation_card.accessibility_name = "Pergunta: " + equation_label.text
 	hint_label.text = "Só um instante. Seu tempo está parado."
 	hint_label.visible = true
 
@@ -356,6 +316,7 @@ func _on_accessibility_profile_message(args: Array) -> void:
 		game_running = false
 		round_preparing = false
 		equation_label.text = "Escolha outra atividade."
+		equation_card.accessibility_name = "Pergunta: " + equation_label.text
 		hint_label.text = "Este jogo não está disponível com seus ajustes de acesso. Volte ao site para continuar."
 		hint_label.visible = true
 		return
@@ -371,8 +332,6 @@ func _apply_accessibility_profile() -> void:
 	background.visible = not accessibility_profile.focusMode
 	focus_background.visible = accessibility_profile.focusMode
 	equation_ornaments.visible = not accessibility_profile.focusMode
-	if not accessibility_profile.audioAssistance:
-		_stop_current_reading()
 	if accessibility_profile.reducedMotion or accessibility_profile.focusMode:
 		if feedback_tween != null and feedback_tween.is_running():
 			feedback_tween.kill()
@@ -410,8 +369,6 @@ func _apply_accessibility_profile() -> void:
 		hint_label.text = "Sem pressa! Toque ou clique no doce com a resposta."
 	if not active_question.is_empty():
 		_update_answer_instructions()
-		if accessibility_profile.audioAssistance:
-			_read_current_question()
 
 
 func _apply_accessibility_text_scale(node: Node, scale: float) -> void:
@@ -493,7 +450,6 @@ func start_round() -> void:
 	active_school_year = 0
 	active_question.clear()
 	active_answer_choices.clear()
-	next_question_voice_prefix = ""
 	_update_score()
 	_update_timer()
 	_request_next_question()
@@ -510,6 +466,7 @@ func _process(delta: float) -> void:
 		profile_wait_seconds += delta
 		if profile_wait_seconds >= 12.0:
 			equation_label.text = "Não conseguimos preparar o jogo."
+			equation_card.accessibility_name = "Pergunta: " + equation_label.text
 			hint_label.text = "Volte à atividade no site e tente novamente."
 			hint_label.visible = true
 	if round_preparing and not request_pending and pending_attempt.is_empty():
@@ -588,9 +545,6 @@ func _input(event: InputEvent) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_R and accessibility_profile.audioAssistance:
-			_read_current_question()
-			return
 		if event.keycode >= KEY_1 and event.keycode <= KEY_4:
 			_smash_answer_index(event.keycode - KEY_1)
 			return
@@ -672,8 +626,6 @@ func _spawn_wave() -> void:
 		candy.position = spawn_point.position + Vector2(randf_range(-spawn_point_jitter, spawn_point_jitter), randf_range(50.0, 100.0))
 		candy.scale = Vector2.ONE * randf_range(0.91, 1.05)
 		candy.smashed.connect(_on_candy_smashed)
-		candy.mouse_entered.connect(_announce_answer_value.bind(active_answer_choices[index], candy))
-		candy.mouse_exited.connect(AudioManager.stop_hover_speech.bind(candy))
 		candy_layer.add_child(candy)
 
 
@@ -725,109 +677,6 @@ func _on_static_answer_pressed(index: int) -> void:
 	_submit_answer(int(answer_button.get_meta("answer_value", 0)), Vector2.ZERO)
 
 
-func _read_current_question(prefix := "") -> void:
-	if not accessibility_profile.audioAssistance or active_question.is_empty():
-		return
-	var spoken_question := _build_question_speech_text(prefix if not prefix.is_empty() else next_question_voice_prefix)
-	next_question_voice_prefix = ""
-	AudioManager.speak_accessibility(spoken_question, true)
-
-
-func _stop_current_reading() -> void:
-	AudioManager.stop_accessibility_speech()
-
-
-func _build_question_speech_text(prefix := "") -> String:
-	var pieces := PackedStringArray()
-	if not prefix.strip_edges().is_empty():
-		pieces.append(prefix.strip_edges())
-	pieces.append(str(active_question.get("prompt", "")) if bool(active_question.get("promptOnly", false)) else "Conta: %s." % _equation_for_speech())
-	if not active_answer_choices.is_empty():
-		var choices := PackedStringArray()
-		for answer in active_answer_choices:
-			choices.append(str(answer))
-		pieces.append("Opções: %s." % ", ".join(choices))
-	return " ".join(pieces)
-
-
-func _on_equation_card_gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		equation_card.accept_event()
-		_read_current_question()
-	elif event is InputEventScreenTouch and event.pressed:
-		equation_card.accept_event()
-		_read_current_question()
-	elif event is InputEventKey and event.pressed and event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
-		equation_card.accept_event()
-		_read_current_question()
-
-
-func _announce_equation_repeat_hint() -> void:
-	if active_question.is_empty():
-		return
-	AudioManager.speak_hover("Aperte mais uma vez para repetir a conta.", equation_card)
-
-
-func _announce_equation_focus() -> void:
-	if active_question.is_empty():
-		return
-	AudioManager.speak_accessibility("Pergunta. Pressione Enter para repetir a pergunta.")
-
-
-func _announce_static_answer_hover(index: int) -> void:
-	if index >= 0 and index < static_answer_buttons.size():
-		_announce_answer_value(int(static_answer_buttons[index].get_meta("answer_value", 0)), static_answer_buttons[index])
-
-
-func _announce_static_answer_focus(index: int) -> void:
-	if index >= 0 and index < static_answer_buttons.size():
-		_announce_answer_value(int(static_answer_buttons[index].get_meta("answer_value", 0)))
-
-
-func _announce_answer_value(value: int, hover_source: Object = null) -> void:
-	if hover_source != null:
-		AudioManager.speak_hover("Opção, %d, clique para confirmar." % value, hover_source)
-	else:
-		AudioManager.speak_accessibility("Opção, %d. Aperte Enter para confirmar." % value)
-
-
-func _speak_game_button(text: String, hover_source: Object = null) -> void:
-	if hover_source != null:
-		AudioManager.speak_hover(text, hover_source)
-	else:
-		AudioManager.speak_accessibility(text)
-
-
-func _equation_for_speech() -> String:
-	var operation: Dictionary = active_question.get("operation", {})
-	var operands: Array = operation.get("operands", [])
-	if operands.is_empty():
-		return equation_label.text
-	var operators: Array = operation.get("operators", [])
-	if operators.is_empty():
-		for _index in range(operands.size() - 1):
-			operators.append(operation.get("kind", selected_operation))
-	var spoken_operators := {"addition": "mais", "subtraction": "menos", "multiplication": "vezes", "division": "dividido por"}
-	var missing_index := int(operation.get("missingIndex", -1))
-	var parts := PackedStringArray()
-	for index in range(operands.size()):
-		if index == missing_index:
-			parts.append("qual número")
-		else:
-			parts.append(_speech_number(operands[index]))
-		if index < operators.size():
-			parts.append(str(spoken_operators.get(str(operators[index]), "")))
-	if missing_index >= 0:
-		return "%s é igual a %s." % [" ".join(parts), _speech_number(operation.get("result", ""))]
-	return "%s igual a qual número?" % " ".join(parts)
-
-
-func _speech_number(value: Variant) -> String:
-	if value is float and is_equal_approx(float(value), roundf(float(value))):
-		return str(roundi(float(value)))
-	return str(value)
-
-
 func _make_choices(answer: int) -> Array[int]:
 	var values: Array[int] = [answer]
 	var offset := 1
@@ -846,7 +695,6 @@ func _request_next_question() -> void:
 	game_running = false
 	round_preparing = true
 	_show_waiting_for_challenge()
-	_stop_current_reading()
 	active_question.clear()
 	active_answer_choices.clear()
 	static_answer_panel.visible = false
@@ -858,6 +706,7 @@ func _request_next_question() -> void:
 		game_running = false
 		round_preparing = false
 		equation_label.text = "Entre pelo Project Gauss para jogar."
+		equation_card.accessibility_name = "Pergunta: " + equation_label.text
 		hint_label.text = "Abra o jogo pela sua atividade no site."
 		return
 	if lesson_mode:
@@ -865,6 +714,7 @@ func _request_next_question() -> void:
 			game_running = false
 			round_preparing = false
 			equation_label.text = "Não foi possível identificar a etapa da aula."
+			equation_card.accessibility_name = "Pergunta: " + equation_label.text
 			return
 		var query := "gameId=%s&operation=%s&practiceMode=lesson&lessonCode=%s&lessonVersion=%d&phaseId=%s" % [game_id.uri_encode(), lesson_operation.uri_encode(), lesson_code.uri_encode(), lesson_version, lesson_phase.uri_encode()]
 		if not classroom_session_id.is_empty():
@@ -898,11 +748,11 @@ func _request_next_question() -> void:
 	else:
 		_spawn_wave()
 	spawn_clock = spawn_interval
-	_read_current_question()
 	return
 	if not _request_question_for_next_practice_set():
 		game_running = false
 		equation_label.text = "Sem contas agora"
+		equation_card.accessibility_name = "Pergunta: " + equation_label.text
 		hint_label.text = "Ainda não há contas dessa operação para sua série."
 
 
@@ -1081,6 +931,7 @@ func _build_local_question(practice_set: String) -> Dictionary:
 func _equation_for(question: Dictionary) -> void:
 	if bool(question.get("promptOnly", false)):
 		equation_label.text = "Leia a pergunta acima"
+		equation_card.accessibility_name = "Pergunta: " + equation_label.text
 		call_deferred("_update_answer_instructions")
 		return
 	var operation: Dictionary = question.get("operation", {})
@@ -1088,6 +939,7 @@ func _equation_for(question: Dictionary) -> void:
 	var operators: Array = operation.get("operators", [])
 	if operands.is_empty():
 		equation_label.text = str(question.get("equation", "Conta numérica indisponível"))
+		equation_card.accessibility_name = "Pergunta: " + equation_label.text
 		call_deferred("_update_answer_instructions")
 		return
 	var symbol: String = operation.get("symbol", OP_SYMBOLS.get(selected_operation, "?"))
@@ -1098,6 +950,7 @@ func _equation_for(question: Dictionary) -> void:
 		var right := "?" if missing_index == 1 else str(operands[1])
 		var result := int(operation.get("result", 0))
 		equation_label.text = "%s%s%s = %d" % [left, expression, right, result]
+		equation_card.accessibility_name = "Pergunta: " + equation_label.text
 	else:
 		if operators.is_empty():
 			operators = [selected_operation]
@@ -1107,6 +960,7 @@ func _equation_for(question: Dictionary) -> void:
 			if index < operators.size():
 				parts.append(" %s " % OP_SYMBOLS.get(operators[index], symbol))
 		equation_label.text = "%s = ?" % "".join(parts)
+		equation_card.accessibility_name = "Pergunta: " + equation_label.text
 	call_deferred("_update_answer_instructions")
 
 
@@ -1118,8 +972,6 @@ func _update_answer_instructions() -> void:
 		input_text = "Toque ou clique no doce com a resposta."
 	if accessibility_profile.pace == "untimed":
 		input_text = "Sem pressa! " + input_text
-	if accessibility_profile.audioAssistance:
-		input_text += " Clique uma vez na conta para ouvi-la de novo."
 	hint_label.text = input_text
 
 
@@ -1258,6 +1110,7 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 			return
 		if round_preparing and active_question.is_empty():
 			equation_label.text = "O desafio ainda não chegou."
+			equation_card.accessibility_name = "Pergunta: " + equation_label.text
 			hint_label.text = "Vamos tentar de novo. Seu tempo está parado."
 			hint_label.visible = true
 			retry_clock = 2.5
@@ -1271,9 +1124,11 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 		round_preparing = false
 		if response_code == 404:
 			equation_label.text = "Sem contas agora"
+			equation_card.accessibility_name = "Pergunta: " + equation_label.text
 			hint_label.text = "Ainda não há contas dessa operação para sua série."
 		else:
 			equation_label.text = "Não conseguimos abrir o desafio."
+			equation_card.accessibility_name = "Pergunta: " + equation_label.text
 			hint_label.text = "Volte à atividade no site e tente novamente."
 		return
 	var response_json := JSON.new()
@@ -1288,6 +1143,7 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 		game_running = false
 		round_preparing = false
 		equation_label.text = "Não conseguimos abrir este desafio."
+		equation_card.accessibility_name = "Pergunta: " + equation_label.text
 		return
 	if completed_request_kind == "school_year":
 		var received_year := int(parsed.get("schoolYear", 0))
@@ -1295,6 +1151,7 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 			game_running = false
 			round_preparing = false
 			equation_label.text = "Não conseguimos preparar seu desafio."
+			equation_card.accessibility_name = "Pergunta: " + equation_label.text
 			hint_label.text = "Volte à atividade no site e tente novamente."
 			return
 		active_school_year = received_year
@@ -1329,6 +1186,7 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 				round_preparing = false
 				hint_label.visible = true
 				equation_label.text = "Não conseguimos abrir este desafio."
+				equation_card.accessibility_name = "Pergunta: " + equation_label.text
 				hint_label.text = "Volte à atividade no site e tente novamente."
 				return
 		var received_operation: Variant = parsed.get("operation")
@@ -1340,6 +1198,7 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 				round_preparing = false
 				hint_label.visible = true
 				equation_label.text = "Não conseguimos abrir este desafio."
+				equation_card.accessibility_name = "Pergunta: " + equation_label.text
 				hint_label.text = "Volte à atividade no site e tente novamente."
 				return
 		if received_lesson_version < 1 or not received_operation is Dictionary or not received_operation.get("operands", []) is Array or received_operation.operands.size() < 2:
@@ -1347,6 +1206,7 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 			round_preparing = false
 			hint_label.visible = true
 			equation_label.text = "Não conseguimos abrir este desafio."
+			equation_card.accessibility_name = "Pergunta: " + equation_label.text
 			hint_label.text = "Volte à atividade no site e tente novamente."
 			return
 		answer_feedback_label.visible = false
@@ -1365,7 +1225,6 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 		else:
 			_spawn_wave()
 		spawn_clock = spawn_interval
-		_read_current_question()
 
 
 func _decode_response_body(body: PackedByteArray) -> String:
@@ -1465,19 +1324,16 @@ func _resolve_attempt(is_correct: bool, _answer_value: int, _from_api := false) 
 		if lesson_correct >= lesson_goal:
 			game_running = false
 			equation_label.text = "Contas concluídas!"
+			equation_card.accessibility_name = "Pergunta: " + equation_label.text
 			hint_label.text = "Continue na aula."
 			JavaScriptBridge.eval("window.parent.postMessage({type:'gauss-ninja-phase-completed',lessonCode:new URLSearchParams(location.search).get('lessonCode'),lessonVersion:Number(new URLSearchParams(location.search).get('lessonVersion')),phaseId:new URLSearchParams(location.search).get('phaseId'),classroomSessionId:new URLSearchParams(location.search).get('classroomSessionId') || ''},location.origin)")
 			return
 	if game_running and is_correct:
-		next_question_voice_prefix = "Você acertou. Próxima conta."
 		_request_next_question()
 	elif game_running and consecutive_wrong_answers >= 3:
 		consecutive_wrong_answers = 0
 		hint_label.text = "Vamos trocar de conta!"
-		next_question_voice_prefix = "Você errou. Vamos trocar de conta."
 		_request_next_question()
-	elif game_running:
-		_read_current_question("Você errou.")
 
 
 func _flash_feedback(flash_color: Color) -> void:
@@ -1538,7 +1394,6 @@ func _update_timer() -> void:
 
 
 func _end_round() -> void:
-	_stop_current_reading()
 	game_running = false
 	remaining_time = 0.0
 	_update_timer()
@@ -1559,16 +1414,11 @@ func _end_round() -> void:
 	game_over_overlay.visible = true
 	retry_button.grab_focus()
 	hint_label.text = "FIM DE JOGO"
-	AudioManager.speak_accessibility(
-		"O tempo acabou. Você marcou %d pontos, acertou %d contas em %d tentativas." % [score, correct_attempts, attempts],
-		true
-	)
 
 
 func _open_pause() -> void:
 	if game_over_overlay.visible:
 		return
-	_stop_current_reading()
 	pause_menu.visible = true
 	pause_options.visible = false
 	pause_art.visible = true
@@ -1598,7 +1448,6 @@ func _resume_game() -> void:
 	if not round_started and not waiting_for_accessibility_profile:
 		start_round()
 	AudioManager.play_ui()
-	AudioManager.speak_accessibility("Continuando o jogo.", true)
 
 
 func _show_pause_options() -> void:
@@ -1607,7 +1456,6 @@ func _show_pause_options() -> void:
 	pause_art.visible = false
 	music_check.grab_focus()
 	AudioManager.play_ui()
-	AudioManager.speak_accessibility("Opções abertas.", true)
 
 
 func _show_pause_menu() -> void:
@@ -1640,27 +1488,6 @@ func _pause_option_toggled(enabled: bool, option_name: String) -> void:
 	config.set_value("options", option_name, enabled)
 	config.save("user://ninja_matematica.cfg")
 	AudioManager.play_ui()
-	AudioManager.speak_option_state(option_name, enabled)
-
-
-func _announce_pause_option_hover(option_name: String, hover_source: Object = null) -> void:
-	var enabled := false
-	match option_name:
-		"music": enabled = music_check.button_pressed
-		"sfx": enabled = sfx_check.button_pressed
-		"hints": enabled = hints_check.button_pressed
-		"fullscreen": enabled = fullscreen_check.button_pressed
-	if hover_source != null:
-		AudioManager.speak_option_state(option_name, enabled, hover_source)
-	else:
-		AudioManager.speak_option_state(option_name, enabled)
-
-
-func _announce_pause_options_back_hover(hover_source: Object = null) -> void:
-	if hover_source != null:
-		AudioManager.speak_hover("Voltar ao menu da pausa.", hover_source)
-	else:
-		AudioManager.speak_accessibility("Voltar ao menu da pausa.")
 
 
 func _retry_round() -> void:
@@ -1679,7 +1506,6 @@ func _exit_to_menu() -> void:
 		return
 	get_tree().paused = false
 	AudioManager.play_ui()
-	AudioManager.speak_accessibility("Indo para o menu.", true)
 	SceneFlow.change_scene("res://scenes/menu.tscn")
 
 

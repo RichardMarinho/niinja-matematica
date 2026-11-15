@@ -37,7 +37,6 @@ texture = ExtResource("1_bg")
 
 [node name="PlayButton" type="Button" parent="HUD/Root"]
 accessibility_name = "Jogar"
-metadata/narration_key = "game:ninja-matematica:menu:play"
 layout_mode = 1
 anchor_left = 0.5
 anchor_right = 0.5
@@ -53,7 +52,6 @@ theme_override_constants/icon_max_width = 42
 
 [node name="OptionsButton" type="Button" parent="HUD/Root"]
 accessibility_name = "Opções"
-metadata/narration_key = "game:ninja-matematica:menu:options"
 layout_mode = 1
 anchor_left = 0.5
 anchor_right = 0.5
@@ -72,7 +70,6 @@ script = ExtResource("focus_visibility")
 
 [node name="ExitButton" type="Button" parent="HUD/Root"]
 accessibility_name = "Sair e voltar ao site"
-metadata/narration_key = "game:ninja-matematica:menu:exit"
 layout_mode = 1
 anchor_left = 0.5
 anchor_right = 0.5

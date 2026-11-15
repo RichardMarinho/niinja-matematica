@@ -187,7 +187,6 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_pause")
 theme_override_styles/hover = SubResource("StyleBoxFlat_pause")
 icon = ExtResource("ui_pause")
 icon_alignment = 1
-metadata/narration_key = "game:ninja-matematica:game:pause"
 
 [node name="TimerCard" type="Panel" parent="HUD/Root/TopBar" unique_id=782196841]
 layout_mode = 1
@@ -323,7 +322,6 @@ theme_override_colors/font_color = Color(1, 0.92, 0.75, 1)
 theme_override_font_sizes/font_size = 22
 text = "TROFÉUS: consultando..."
 vertical_alignment = 1
-metadata/narration_key = "game:ninja-matematica:trophies:count"
 
 [node name="Notice" type="Label" parent="HUD/Root/TopBar/TrophyCard"]
 visible = false
@@ -336,7 +334,6 @@ theme_override_colors/font_color = Color(1, 0.85, 0.38, 1)
 theme_override_font_sizes/font_size = 20
 text = "Você ganhou um troféu!"
 vertical_alignment = 1
-metadata/narration_key = "game:ninja-matematica:trophies:earned"
 
 [node name="EquationCard" type="Panel" parent="HUD/Root" unique_id=729544868]
 layout_mode = 1
@@ -609,7 +606,6 @@ theme_override_constants/icon_max_width = 34
 theme_override_font_sizes/font_size = 28
 text = "CONTINUAR"
 icon = ExtResource("ui_play")
-metadata/narration_key = "game:ninja-matematica:pause:resume"
 
 [node name="OptionsButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu" unique_id=1202734061]
 layout_mode = 0
@@ -623,7 +619,6 @@ theme_override_constants/icon_max_width = 34
 theme_override_font_sizes/font_size = 28
 text = "OPÇÕES"
 icon = ExtResource("ui_gear")
-metadata/narration_key = "game:ninja-matematica:pause:options"
 
 [node name="ExitButton" type="Button" parent="HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu" unique_id=1388226253]
 layout_mode = 0
@@ -637,7 +632,6 @@ theme_override_constants/icon_max_width = 34
 theme_override_font_sizes/font_size = 28
 text = "VOLTAR AO MENU"
 icon = ExtResource("ui_back")
-metadata/narration_key = "game:ninja-matematica:pause:menu"
 
 [node name="PauseOptions" parent="HUD/Root/PauseOverlay/Center" unique_id=1843014083 instance=ExtResource("options_panel")]
 visible = false
@@ -702,7 +696,6 @@ texture = ExtResource("12_game_over")
 expand_mode = 1
 stretch_mode = 5
 accessibility_name = "Você perdeu"
-metadata/narration_key = "game:ninja-matematica:game-over:title"
 
 [node name="Content" type="Control" parent="HUD/Root/GameOverOverlay/Center/GameOverCard" unique_id=1122971597]
 layout_mode = 1
@@ -726,7 +719,6 @@ text = "0"
 horizontal_alignment = 2
 vertical_alignment = 1
 accessibility_name = "Pontos: 0"
-metadata/narration_key = "game:ninja-matematica:game-over:score"
 
 [node name="CorrectValue" type="Label" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=106258822]
 layout_mode = 1
@@ -742,7 +734,6 @@ text = "0"
 horizontal_alignment = 1
 vertical_alignment = 1
 accessibility_name = "Acertos: 0"
-metadata/narration_key = "game:ninja-matematica:game-over:correct"
 
 [node name="AttemptsValue" type="Label" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=1409688944]
 layout_mode = 1
@@ -758,7 +749,6 @@ text = "0"
 horizontal_alignment = 2
 vertical_alignment = 1
 accessibility_name = "Tentativas: 0"
-metadata/narration_key = "game:ninja-matematica:game-over:attempts"
 
 [node name="RetryButton" type="Button" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=1379399717]
 layout_mode = 1
@@ -771,7 +761,6 @@ theme_type_variation = &"Button"
 theme_override_font_sizes/font_size = 30
 text = "TENTAR NOVAMENTE"
 accessibility_name = "Tentar novamente"
-metadata/narration_key = "game:ninja-matematica:game-over:retry"
 focus_neighbor_bottom = NodePath("../ExitButton")
 
 [node name="ExitButton" type="Button" parent="HUD/Root/GameOverOverlay/Center/GameOverCard/Content" unique_id=536348199]
@@ -785,7 +774,6 @@ theme_type_variation = &"PurpleButton"
 theme_override_font_sizes/font_size = 30
 text = "SAIR PARA O MENU"
 accessibility_name = "Sair para o menu"
-metadata/narration_key = "game:ninja-matematica:game-over:menu"
 focus_neighbor_top = NodePath("../RetryButton")
 
 [node name="API" type="HTTPRequest" parent="." unique_id=617210625]

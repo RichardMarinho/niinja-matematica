@@ -50,10 +50,9 @@ func run() -> void:
 	if root.gui_get_focus_owner() != null:
 		root.gui_get_focus_owner().release_focus()
 	await key(KEY_TAB)
-	check(root.gui_get_focus_owner() == game.equation_card, "First Tab focuses repeatable equation")
-	var repeat_before: int = game.repeated_questions
+	check(root.gui_get_focus_owner() == game.equation_card, "First Tab focuses equation")
 	await key(KEY_ENTER)
-	check(game.repeated_questions == repeat_before + 1 and game.sent_attempts == 0, "Equation Enter repeats without answer")
+	check(game.sent_attempts == 0, "Equation Enter never submits an answer")
 	await key(KEY_TAB)
 	check(root.gui_get_focus_owner() == game.static_answer_buttons[0], "Tab reaches first answer")
 	await key(KEY_TAB, true)

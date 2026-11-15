@@ -103,20 +103,20 @@
     },
     {
         "key":  "game:ninja-matematica:preparation:easy-help",
-        "text":  "Fácil. As contas são tranquilas. Os doces vêm devagar e sobra tempo pra pensar. Se errar, perde só um pouquinho de tempo.",
-        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "text":  "FÁCIL\nAs contas são tranquilas. Os doces vêm devagar e sobra tempo pra pensar. Se errar, perde só um pouquinho de tempo.",
+        "context":  "Texto integral visível na ajuda da dificuldade. A quebra após o título pode ser uma pausa natural; revisar como fala completa.",
         "priority":  "required"
     },
     {
         "key":  "game:ninja-matematica:preparation:normal-help",
-        "text":  "Normal. Desafio na medida! As contas e a velocidade ficam no meio. Errou? Perde um pouco de tempo.",
-        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "text":  "NORMAL\nDesafio na medida! As contas e a velocidade ficam no meio. Errou? Perde um pouco de tempo.",
+        "context":  "Texto integral visível na ajuda da dificuldade. A quebra após o título pode ser uma pausa natural; revisar como fala completa.",
         "priority":  "required"
     },
     {
         "key":  "game:ninja-matematica:preparation:hard-help",
-        "text":  "Difícil. Partiu desafio? As contas ficam mais difíceis, os doces voam e sobra menos tempo. Errar tira mais tempo.",
-        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "text":  "DIFÍCIL\nPartiu desafio? As contas ficam mais difíceis, os doces voam e sobra menos tempo. Errar tira mais tempo.",
+        "context":  "Texto integral visível na ajuda da dificuldade. A quebra após o título pode ser uma pausa natural; revisar como fala completa.",
         "priority":  "required"
     },
     {
@@ -182,19 +182,19 @@
     {
         "key":  "game:ninja-matematica:game-over:score",
         "text":  "Pontos: 10",
-        "context":  "Tela de fim de partida: exemplo do nome acessível do valor dinâmico de pontos; o número muda conforme a partida.",
+        "context":  "[modelo dinâmico] Tela de fim de partida: exemplo do nome acessível do valor dinâmico de pontos; o número muda conforme a partida. EXEMPLO, não publicar/reutilizar como áudio fixo de qualquer total. Compor rótulo de score e valor público com blocos numéricos revisados; número exato vem da partida. Nunca reutilizar o número deste exemplo.",
         "priority":  "required"
     },
     {
         "key":  "game:ninja-matematica:game-over:correct",
         "text":  "Acertos: 4",
-        "context":  "Tela de fim de partida: exemplo do nome acessível do total dinâmico de acertos; o número muda conforme a partida.",
+        "context":  "[modelo dinâmico] Tela de fim de partida: exemplo do nome acessível do total dinâmico de acertos; o número muda conforme a partida. EXEMPLO, não publicar/reutilizar como áudio fixo de qualquer total. Compor rótulo de correct e valor público com blocos numéricos revisados; número exato vem da partida. Nunca reutilizar o número deste exemplo.",
         "priority":  "required"
     },
     {
         "key":  "game:ninja-matematica:game-over:attempts",
         "text":  "Tentativas: 6",
-        "context":  "Tela de fim de partida: exemplo do nome acessível do total dinâmico de tentativas; o número muda conforme a partida.",
+        "context":  "[modelo dinâmico] Tela de fim de partida: exemplo do nome acessível do total dinâmico de tentativas; o número muda conforme a partida. EXEMPLO, não publicar/reutilizar como áudio fixo de qualquer total. Compor rótulo de attempts e valor público com blocos numéricos revisados; número exato vem da partida. Nunca reutilizar o número deste exemplo.",
         "priority":  "required"
     },
     {
@@ -210,19 +210,19 @@
         "priority":  "required"
     },
     {
-        "priority":  "required",
-        "context":  "HUD. count é somente o saldo confirmado pela API; preparar estratégia de leitura de números no catálogo central.",
         "key":  "game:ninja-matematica:trophies:count",
-        "text":  "Total de troféus: {count}"
+        "text":  "Total de troféus: 42",
+        "context":  "[modelo dinâmico] Exemplo do saldo oficial. HUD oculto nesta build; não ler nem gerar agora. Futuro: rótulo e número confirmado pela API, sem identidade do aluno.",
+        "priority":  "optional"
     },
     {
-        "priority":  "required",
+        "priority":  "optional",
         "context":  "Mostrar somente quando trophiesDelta confirmado for 1; replay e firstCorrect não ativam.",
         "key":  "game:ninja-matematica:trophies:earned",
         "text":  "Você ganhou um troféu!"
     },
     {
-        "priority":  "required",
+        "priority":  "optional",
         "context":  "Falha de leitura do resumo; saldo desconhecido, nunca zero inventado.",
         "key":  "game:ninja-matematica:trophies:unavailable",
         "text":  "Não foi possível consultar seus troféus agora."
@@ -236,7 +236,415 @@
     {
         "priority":  "required",
         "context":  "Tentativa pendente mantém mesma identidade e payload para retry.",
-        "key":  "game:ninja-matematica:game:wait_before_exit",
+        "key":  "game:ninja-matematica:game:wait-before-exit",
         "text":  "Aguarde a confirmação da sua resposta antes de sair."
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:help-title",
+        "text":  "O que muda em cada nível?",
+        "context":  "Título visível da ajuda.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:easy-selected",
+        "text":  "Dificuldade Fácil selecionada.",
+        "context":  "Estado público do botão de dificuldade selecionado. Três falas completas; não combinar fragmentos.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:normal-selected",
+        "text":  "Dificuldade Normal selecionada.",
+        "context":  "Estado público do botão de dificuldade selecionado. Três falas completas; não combinar fragmentos.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:hard-selected",
+        "text":  "Dificuldade Difícil selecionada.",
+        "context":  "Estado público do botão de dificuldade selecionado. Três falas completas; não combinar fragmentos.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:addition-on",
+        "text":  "As contas de adição foram ativadas.",
+        "context":  "Estado público da operação na preparação. Oito falas completas para quatro controles, sem criar combinações de seleção.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:addition-off",
+        "text":  "As contas de adição foram desativadas.",
+        "context":  "Estado público da operação na preparação. Oito falas completas para quatro controles, sem criar combinações de seleção.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:subtraction-on",
+        "text":  "As contas de subtração foram ativadas.",
+        "context":  "Estado público da operação na preparação. Oito falas completas para quatro controles, sem criar combinações de seleção.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:subtraction-off",
+        "text":  "As contas de subtração foram desativadas.",
+        "context":  "Estado público da operação na preparação. Oito falas completas para quatro controles, sem criar combinações de seleção.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:multiplication-on",
+        "text":  "As contas de multiplicação foram ativadas.",
+        "context":  "Estado público da operação na preparação. Oito falas completas para quatro controles, sem criar combinações de seleção.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:multiplication-off",
+        "text":  "As contas de multiplicação foram desativadas.",
+        "context":  "Estado público da operação na preparação. Oito falas completas para quatro controles, sem criar combinações de seleção.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:division-on",
+        "text":  "As contas de divisão foram ativadas.",
+        "context":  "Estado público da operação na preparação. Oito falas completas para quatro controles, sem criar combinações de seleção.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:division-off",
+        "text":  "As contas de divisão foram desativadas.",
+        "context":  "Estado público da operação na preparação. Oito falas completas para quatro controles, sem criar combinações de seleção.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:music-on",
+        "text":  "Música: ativada.",
+        "context":  "Nome e estado público do controle em Opções ou Pausa. Oito falas completas; mantém música e efeitos separados da narração.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:music-off",
+        "text":  "Música: desativada.",
+        "context":  "Nome e estado público do controle em Opções ou Pausa. Oito falas completas; mantém música e efeitos separados da narração.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:sfx-on",
+        "text":  "Efeitos sonoros: ativados.",
+        "context":  "Nome e estado público do controle em Opções ou Pausa. Oito falas completas; mantém música e efeitos separados da narração.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:sfx-off",
+        "text":  "Efeitos sonoros: desativados.",
+        "context":  "Nome e estado público do controle em Opções ou Pausa. Oito falas completas; mantém música e efeitos separados da narração.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:hints-on",
+        "text":  "Dicas durante a partida: ativadas.",
+        "context":  "Nome e estado público do controle em Opções ou Pausa. Oito falas completas; mantém música e efeitos separados da narração.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:hints-off",
+        "text":  "Dicas durante a partida: desativadas.",
+        "context":  "Nome e estado público do controle em Opções ou Pausa. Oito falas completas; mantém música e efeitos separados da narração.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:fullscreen-on",
+        "text":  "Tela cheia: ativada.",
+        "context":  "Nome e estado público do controle em Opções ou Pausa. Oito falas completas; mantém música e efeitos separados da narração.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:fullscreen-off",
+        "text":  "Tela cheia: desativada.",
+        "context":  "Nome e estado público do controle em Opções ou Pausa. Oito falas completas; mantém música e efeitos separados da narração.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:session-required",
+        "text":  "Entre pelo Project Gauss para jogar.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:open-on-site",
+        "text":  "Abra o jogo pela sua atividade no site.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:preparing",
+        "text":  "Preparando seu desafio...",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:waiting",
+        "text":  "Só um instante. Seu tempo está parado.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:choose-activity",
+        "text":  "Escolha outra atividade.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:access-unavailable",
+        "text":  "Este jogo não está disponível com seus ajustes de acesso. Volte ao site para continuar.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:prepare-failed",
+        "text":  "Não conseguimos preparar o jogo.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:return-and-retry",
+        "text":  "Volte à atividade no site e tente novamente.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:phase-unavailable",
+        "text":  "Não foi possível identificar a etapa da aula.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:no-questions",
+        "text":  "Sem contas agora",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:no-operation",
+        "text":  "Ainda não há contas dessa operação para sua série.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:read-above",
+        "text":  "Leia a pergunta acima",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:equation-unavailable",
+        "text":  "Conta numérica indisponível",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:answer-pending",
+        "text":  "Ainda estamos conferindo sua resposta. Seu tempo está parado.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:question-pending",
+        "text":  "O desafio ainda não chegou.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:retry-wait",
+        "text":  "Vamos tentar de novo. Seu tempo está parado.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:open-failed",
+        "text":  "Não conseguimos abrir o desafio.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:invalid-challenge",
+        "text":  "Não conseguimos abrir este desafio.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:prepare-challenge-failed",
+        "text":  "Não conseguimos preparar seu desafio.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:hit-number",
+        "text":  "Acerte um doce com o número!",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:correct",
+        "text":  "ACERTOU!",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:wrong",
+        "text":  "ERROU. Tente outra resposta.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:try-again",
+        "text":  "Ainda não. Tente outra resposta!",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:complete",
+        "text":  "Contas concluídas!",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:continue-lesson",
+        "text":  "Continue na aula.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:change-question",
+        "text":  "Vamos trocar de conta!",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:untimed",
+        "text":  "Tempo sem limite",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:over",
+        "text":  "FIM DE JOGO",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:tap-number",
+        "text":  "Toque ou clique no número certo.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:tap-number-untimed",
+        "text":  "Sem pressa! Toque ou clique no número certo.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:tap-candy",
+        "text":  "Toque no doce que tem a resposta.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:click-candy",
+        "text":  "Toque ou clique no doce com a resposta.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:tap-candy-untimed",
+        "text":  "Sem pressa! Toque no doce que tem a resposta.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:click-candy-untimed",
+        "text":  "Sem pressa! Toque ou clique no doce com a resposta.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:choose-basic",
+        "text":  "Escolha adição ou subtração para começar.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:menu:exit-unavailable",
+        "text":  "Abra o jogo pelo site para usar Sair.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:menu:exit-description",
+        "text":  "Voltar à tela do site onde você abriu o jogo.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:back-menu",
+        "text":  "Voltar ao menu.",
+        "context":  "Texto público da jornada em scripts/main.gd, menu.gd ou preparation.gd. Usar exatamente a mensagem visível/nome acessível, sem acrescentar dados da questão.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:question",
+        "text":  "Conta: dois mais três igual a qual número? Opções: quatro, cinco, seis, sete.",
+        "context":  "[modelo dinâmico] Exemplo de pergunta e alternativas públicas. Variam operandos visíveis, operação, posição da lacuna e alternativas (não o gabarito privado). Conteúdo oficial deve ganhar chave associada à versão após revisão central; operações geradas precisam de gramática de números/operadores aprovada por Gouvea. Preferir frases completas por pergunta; se usar composição, até 12 chaves do mesmo catálogo e revisão de pausas. Não enumerar todas as combinações agora. Nunca ler operando oculto nem resultado que a tela mostra como ?.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:answer-pointer",
+        "text":  "Opção, 4, clique para confirmar.",
+        "context":  "[modelo dinâmico] Exemplo de alternativa visível sob o ponteiro, sem indicação de acerto. Proposta: abertura Opção + número revisado + instrução de confirmar. Homologar a frase composta antes de ativar; nenhum número de exemplo é áudio universal.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:answer-keyboard",
+        "text":  "Opção, 4. Aperte Enter para confirmar.",
+        "context":  "[modelo dinâmico] Mesmo número público da opção em foco. Usar uma composição curta com instrução específica de teclado. Não anunciar gabarito ou escolha certa.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:round-result",
+        "text":  "O tempo acabou. Você marcou 100 pontos, acertou 4 contas em 6 tentativas.",
+        "context":  "[modelo dinâmico] Exemplo realista de resultado público. Variáveis: pontos locais, acertos e tentativas. Proposta: frase de abertura + blocos de total de pontos/acertos/tentativas, com números aprovados; limitar a sequência a 12 chaves. Não gerar o produto cartesiano dos totais e não publicar este exemplo como resultado genérico.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:preparation-ready",
+        "text":  "Pronto! Normal · 2 operação(ões) selecionada(s).",
+        "context":  "[modelo dinâmico] Texto visível de status. Dificuldade tem três valores e operações de 1 a 4. Proposta: Pronto + dificuldade + quantidade de operações em frases revisadas. Reutilizar blocos aprovados sem enumerar todas as combinações.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:score",
+        "text":  "PONTOS: 100",
+        "context":  "[modelo dinâmico] Valor público local, distinto de troféus. Compor rótulo e número revisado; não gerar milhares de totais.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:record",
+        "text":  "RECORDE: 100",
+        "context":  "[modelo dinâmico] Recorde local público. Mesmo plano de números; não usar o exemplo como áudio de outro valor.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:time",
+        "text":  "TEMPO: 45",
+        "context":  "[modelo dinâmico] Tempo restante público. Não narrar contagem contínua automaticamente; leitura voluntária pode combinar rótulo e número revisado. Sem limite usa game:ninja-matematica:game:untimed.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:streak",
+        "text":  "ACERTO! Sequencia 2! +7s de tempo!",
+        "context":  "[modelo dinâmico] Feedback público do combo e bônus de tempo; no modo sem limite não há bônus temporal. Preferir acerto fixo e leitura opcional dos totais em blocos, sem combinatória de placares.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:dynamic:api-feedback",
+        "text":  "Ainda não. Tente outra resposta!",
+        "context":  "[modelo dinâmico] Exemplo público. feedback.reason da API pode variar e necessita associação oficial de conteúdo/versão a chave publicada. Não serializar resposta HTTP, gabarito nem sessão para a ponte. Texto permanece na tela até existir cobertura.",
+        "priority":  "required"
     }
 ]

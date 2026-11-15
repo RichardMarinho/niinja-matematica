@@ -3,10 +3,18 @@ extends Node
 const MENU_SCENE := "res://scenes/menu.tscn"
 
 var _scene_change_authorized := false
+var preparation_school_year := 0
 
 
 func entered_menu() -> void:
 	_scene_change_authorized = false
+	preparation_school_year = 0
+
+
+func take_preparation_school_year() -> int:
+	var school_year := preparation_school_year
+	preparation_school_year = 0
+	return school_year
 
 
 func change_scene(scene_path: String) -> Error:
