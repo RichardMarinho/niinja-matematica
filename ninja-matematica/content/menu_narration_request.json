@@ -1,0 +1,242 @@
+[
+    {
+        "key":  "game:ninja-matematica:menu:play",
+        "text":  "Jogar",
+        "context":  "Menu principal: rótulo do controle PlayButton. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:menu:options",
+        "text":  "Opções",
+        "context":  "Menu principal: rótulo do controle OptionsButton. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:help",
+        "text":  "Ajuda sobre os níveis de dificuldade",
+        "context":  "Preparar partida: rótulo do controle DifficultyHelpButton. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:easy",
+        "text":  "Fácil",
+        "context":  "Preparar partida: rótulo do controle EasyButton. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:normal",
+        "text":  "Normal",
+        "context":  "Preparar partida: rótulo do controle NormalButton. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:hard",
+        "text":  "Difícil",
+        "context":  "Preparar partida: rótulo do controle HardButton. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:addition",
+        "text":  "Adição",
+        "context":  "Preparar partida: rótulo do controle AdditionCheck. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:subtraction",
+        "text":  "Subtração",
+        "context":  "Preparar partida: rótulo do controle SubtractionCheck. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:multiplication",
+        "text":  "Multiplicação",
+        "context":  "Preparar partida: rótulo do controle MultiplicationCheck. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:division",
+        "text":  "Divisão",
+        "context":  "Preparar partida: rótulo do controle DivisionCheck. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:back",
+        "text":  "Voltar",
+        "context":  "Preparar partida: rótulo do controle BackButton. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:start",
+        "text":  "Começar",
+        "context":  "Preparar partida: rótulo do controle StartButton. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:close-help",
+        "text":  "Fechar ajuda",
+        "context":  "Preparar partida: rótulo do controle HelpCloseButton. Ícones decorativos não são pronunciados.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:instruction",
+        "text":  "Escolha uma dificuldade e pelo menos uma operação.",
+        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:confirm-year",
+        "text":  "Confirmando sua série...",
+        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:session-required",
+        "text":  "Entre pelo Project Gauss para confirmar sua série.",
+        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:operation-eligibility",
+        "text":  "Multiplicação e divisão: a partir do 3º ano.",
+        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:easy-help",
+        "text":  "Fácil. As contas são tranquilas. Os doces vêm devagar e sobra tempo pra pensar. Se errar, perde só um pouquinho de tempo.",
+        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:normal-help",
+        "text":  "Normal. Desafio na medida! As contas e a velocidade ficam no meio. Errou? Perde um pouco de tempo.",
+        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:preparation:hard-help",
+        "text":  "Difícil. Partiu desafio? As contas ficam mais difíceis, os doces voam e sobra menos tempo. Errar tira mais tempo.",
+        "context":  "Preparar partida: instrução, estado ou conteúdo público da ajuda.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game:pause",
+        "text":  "Pausar",
+        "context":  "Partida: botão para pausar o jogo.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:pause:resume",
+        "text":  "Continuar",
+        "context":  "Pausa: retoma a partida atual.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:pause:options",
+        "text":  "Opções",
+        "context":  "Pausa: abre as opções da partida.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:pause:menu",
+        "text":  "Voltar ao menu",
+        "context":  "Pausa: sai da partida atual e retorna ao menu do jogo.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:music",
+        "text":  "Música",
+        "context":  "Opções: alterna a música do jogo.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:sfx",
+        "text":  "Efeitos sonoros",
+        "context":  "Opções: alterna os efeitos sonoros.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:hints",
+        "text":  "Dicas durante a partida",
+        "context":  "Opções: alterna as dicas durante a partida.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:fullscreen",
+        "text":  "Tela cheia",
+        "context":  "Opções: alterna a tela cheia.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:options:back",
+        "text":  "Voltar",
+        "context":  "Opções: fecha a tela de opções.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game-over:title",
+        "text":  "Você perdeu",
+        "context":  "Tela de fim de partida: título da arte, também exposto pelo nome acessível.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game-over:score",
+        "text":  "Pontos: 10",
+        "context":  "Tela de fim de partida: exemplo do nome acessível do valor dinâmico de pontos; o número muda conforme a partida.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game-over:correct",
+        "text":  "Acertos: 4",
+        "context":  "Tela de fim de partida: exemplo do nome acessível do total dinâmico de acertos; o número muda conforme a partida.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game-over:attempts",
+        "text":  "Tentativas: 6",
+        "context":  "Tela de fim de partida: exemplo do nome acessível do total dinâmico de tentativas; o número muda conforme a partida.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game-over:retry",
+        "text":  "Tentar novamente",
+        "context":  "Tela de fim de partida: botão para reiniciar a atividade.",
+        "priority":  "required"
+    },
+    {
+        "key":  "game:ninja-matematica:game-over:menu",
+        "text":  "Sair para o menu",
+        "context":  "Tela de fim de partida: botão para voltar ao menu principal.",
+        "priority":  "required"
+    },
+    {
+        "priority":  "required",
+        "context":  "HUD. count é somente o saldo confirmado pela API; preparar estratégia de leitura de números no catálogo central.",
+        "key":  "game:ninja-matematica:trophies:count",
+        "text":  "Total de troféus: {count}"
+    },
+    {
+        "priority":  "required",
+        "context":  "Mostrar somente quando trophiesDelta confirmado for 1; replay e firstCorrect não ativam.",
+        "key":  "game:ninja-matematica:trophies:earned",
+        "text":  "Você ganhou um troféu!"
+    },
+    {
+        "priority":  "required",
+        "context":  "Falha de leitura do resumo; saldo desconhecido, nunca zero inventado.",
+        "key":  "game:ninja-matematica:trophies:unavailable",
+        "text":  "Não foi possível consultar seus troféus agora."
+    },
+    {
+        "priority":  "required",
+        "context":  "Menu principal. Retorna à tela que abriu o iframe, sem fechar navegador.",
+        "key":  "game:ninja-matematica:menu:exit",
+        "text":  "Sair. Voltar ao site."
+    },
+    {
+        "priority":  "required",
+        "context":  "Tentativa pendente mantém mesma identidade e payload para retry.",
+        "key":  "game:ninja-matematica:game:wait_before_exit",
+        "text":  "Aguarde a confirmação da sua resposta antes de sair."
+    }
+]

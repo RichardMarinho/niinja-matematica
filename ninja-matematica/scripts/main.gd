@@ -31,6 +31,7 @@ const DIFFICULTIES := {
 @onready var crack_layer: Node2D = $CrackLayer
 @onready var candy_spawn_points: Node2D = $CandySpawnPoints
 @onready var api: HTTPRequest = $API
+@onready var trophies: Node = $Trophies
 @onready var equation_card: Panel = $HUD/Root/EquationCard
 @onready var score_label: Label = $HUD/Root/TopBar/ScoreCard/Score
 @onready var timer_label: Label = $HUD/Root/TopBar/TimerCard/Timer
@@ -51,29 +52,16 @@ const DIFFICULTIES := {
 @onready var pause_button: Button = $HUD/Root/TopBar/PauseButton
 @onready var pause_overlay: Control = $HUD/Root/PauseOverlay
 @onready var pause_art: TextureRect = $HUD/Root/PauseOverlay/Center/PauseArt
-@onready var pause_options_art: TextureRect = $HUD/Root/PauseOverlay/Center/PauseOptionsArt
 @onready var pause_menu: Control = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu
-@onready var pause_options: Control = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions
+@onready var pause_options: Control = $HUD/Root/PauseOverlay/Center/PauseOptions
 @onready var resume_button: Button = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu/ResumeButton
 @onready var pause_options_button: Button = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu/OptionsButton
 @onready var pause_exit_button: Button = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu/ExitButton
-@onready var pause_options_back_button: Button = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/BackButton
-@onready var music_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/MusicCheck
-@onready var sfx_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/SfxCheck
-@onready var hints_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/HintsCheck
-@onready var fullscreen_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenCheck
-@onready var pause_toggle_tracks: Array[Panel] = [
-	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/MusicTrack,
-	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/SfxTrack,
-	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/HintsTrack,
-	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenTrack,
-]
-@onready var pause_toggle_knobs: Array[Panel] = [
-	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/MusicTrack/MusicKnob,
-	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/SfxTrack/SfxKnob,
-	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/HintsTrack/HintsKnob,
-	$HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseOptions/FullscreenTrack/FullscreenKnob,
-]
+@onready var pause_options_back_button: Button = $HUD/Root/PauseOverlay/Center/PauseOptions/Content/BackButton
+@onready var music_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseOptions/Content/MusicCheck
+@onready var sfx_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseOptions/Content/SfxCheck
+@onready var hints_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseOptions/Content/HintsCheck
+@onready var fullscreen_check: CheckButton = $HUD/Root/PauseOverlay/Center/PauseOptions/Content/FullscreenCheck
 @onready var game_over_overlay: Control = $HUD/Root/GameOverOverlay
 @onready var game_over_score: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/ScoreValue
 @onready var game_over_correct: Label = $HUD/Root/GameOverOverlay/Center/GameOverCard/Content/CorrectValue
@@ -132,6 +120,18 @@ var accessibility_profile := {
 var accessibility_callback_ref: JavaScriptObject
 var waiting_for_accessibility_profile := false
 var accessibility_profile_received := false
+var scene_initialized := false
+var round_started := false
+var round_preparing := false
+var profile_wait_seconds := 0.0
+var pause_previous_focus: Control
+var pause_focus_modes: Dictionary = {}
+var keyboard_answers := false
+var keyboard_focus_visible := false
+var gameplay_focus_styles: Dictionary = {}
+var equation_normal_style: StyleBox
+var equation_focus_style: StyleBox
+var pending_answer_focus: Button
 
 
 func _ready() -> void:
@@ -143,10 +143,29 @@ func _ready() -> void:
 			AudioManager.set_accessibility_sound_effects(false)
 	_apply_gameplay_number_font()
 	api.request_completed.connect(_on_api_request_completed)
+	api.timeout = 15.0
+	pause_overlay.cancelled.connect(_on_pause_cancel)
 	equation_card.gui_input.connect(_on_equation_card_gui_input)
+	equation_card.focus_entered.connect(_announce_equation_focus)
 	equation_card.mouse_entered.connect(_announce_equation_repeat_hint)
 	equation_card.mouse_exited.connect(AudioManager.stop_hover_speech.bind(equation_card))
 	equation_card.focus_mode = Control.FOCUS_ALL
+	equation_card.accessibility_name = "Pergunta. Pressione Enter para repetir a pergunta."
+	equation_normal_style = equation_card.get_theme_stylebox("panel")
+	var focus_style := StyleBoxFlat.new()
+	focus_style.bg_color = Color(0, 0, 0, 0)
+	focus_style.border_color = Color(0.2, 0.85, 1.0)
+	focus_style.set_border_width_all(5)
+	focus_style.set_corner_radius_all(18)
+	for button in [pause_button] + static_answer_buttons:
+		button.focus_mode = Control.FOCUS_ALL
+		gameplay_focus_styles[button] = focus_style
+	equation_focus_style = equation_normal_style.duplicate()
+	if equation_focus_style is StyleBoxFlat:
+		equation_focus_style.border_color = focus_style.border_color
+		equation_focus_style.set_border_width_all(5)
+	get_viewport().gui_focus_changed.connect(_refresh_gameplay_focus)
+	_refresh_gameplay_focus(null)
 	equation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for index in range(static_answer_buttons.size()):
 		static_answer_buttons[index].mouse_entered.connect(_announce_static_answer_hover.bind(index))
@@ -229,7 +248,6 @@ func _ready() -> void:
 	sfx_check.button_pressed = bool(settings.sfx)
 	hints_check.button_pressed = bool(settings.show_hints)
 	fullscreen_check.button_pressed = bool(settings.fullscreen)
-	_sync_pause_toggle_art()
 	music_check.toggled.connect(_pause_option_toggled.bind("music"))
 	music_check.mouse_entered.connect(_announce_pause_option_hover.bind("music", music_check))
 	music_check.mouse_exited.connect(AudioManager.stop_hover_speech.bind(music_check))
@@ -253,7 +271,6 @@ func _ready() -> void:
 	pause_menu.visible = true
 	pause_options.visible = false
 	pause_art.visible = true
-	pause_options_art.visible = false
 	game_over_overlay.visible = false
 	static_answer_panel.visible = false
 	round_seconds = float(difficulty.seconds)
@@ -263,16 +280,25 @@ func _ready() -> void:
 	hint_label.visible = bool(settings.show_hints)
 	_update_score()
 	_update_record()
+	scene_initialized = true
+	remaining_time = round_seconds
+	_update_timer()
+	trophies.load_summary(api_base_url, api_token)
 	if local_mode:
 		equation_label.text = "Entre pelo Project Gauss para jogar."
-		hint_label.text = "Sem sessão autenticada, as respostas não podem ser corrigidas nem registradas no seu progresso."
+		hint_label.text = "Abra o jogo pela sua atividade no site."
+		hint_label.visible = true
 		return
-	if local_mode:
-		hint_label.text = "Modo offline: contas dos mesmos conjuntos de pratica da API."
 	if waiting_for_accessibility_profile:
-		equation_label.text = "Carregando ajustes de acessibilidade..."
+		_show_waiting_for_challenge()
 	else:
 		start_round()
+
+
+func _show_waiting_for_challenge() -> void:
+	equation_label.text = "Preparando seu desafio..."
+	hint_label.text = "Só um instante. Seu tempo está parado."
+	hint_label.visible = true
 
 
 func _install_accessibility_bridge() -> bool:
@@ -328,12 +354,15 @@ func _on_accessibility_profile_message(args: Array) -> void:
 	if accessibility_profile.accessibleActivity == "react":
 		waiting_for_accessibility_profile = false
 		game_running = false
-		equation_label.text = "Este perfil pede a atividade React acessivel."
-		hint_label.text = "O host ainda nao oferece a alternativa React do MathNinja; volte ao menu para escolher outra atividade."
+		round_preparing = false
+		equation_label.text = "Escolha outra atividade."
+		hint_label.text = "Este jogo não está disponível com seus ajustes de acesso. Volte ao site para continuar."
+		hint_label.visible = true
 		return
-	if waiting_for_accessibility_profile and not game_running:
+	if waiting_for_accessibility_profile:
 		waiting_for_accessibility_profile = false
-		start_round()
+		if scene_initialized and not round_started and not get_tree().paused:
+			start_round()
 
 
 func _apply_accessibility_profile() -> void:
@@ -356,9 +385,9 @@ func _apply_accessibility_profile() -> void:
 	else:
 		_clear_label_contrast($HUD/Root)
 	round_seconds = 160.0 if accessibility_profile.pace == "extended" else float(difficulty.seconds)
-	if not game_running:
+	if not round_started:
 		remaining_time = round_seconds
-	var use_static_answers := bool(accessibility_profile.reducedMotion)
+	var use_static_answers := _uses_static_answers()
 	if use_static_answers != static_answer_mode_active:
 		static_answer_mode_active = use_static_answers
 		static_answer_panel.visible = false
@@ -372,7 +401,7 @@ func _apply_accessibility_profile() -> void:
 			else:
 				spawn_clock = 0.0
 	timer_label.visible = true
-	if accessibility_profile.reducedMotion:
+	if _uses_static_answers():
 		var static_hint := "Toque ou clique no número certo."
 		if accessibility_profile.pace == "untimed":
 			static_hint = "Sem pressa! Toque ou clique no número certo."
@@ -398,8 +427,8 @@ func _apply_accessibility_text_scale(node: Node, scale: float) -> void:
 
 
 func _set_label_contrast(node: Node) -> void:
-	if node is BaseButton and _is_pause_art_button(node):
-		_set_pause_art_button_text_transparent(node as BaseButton)
+	if node is BaseButton and pause_overlay.is_ancestor_of(node):
+		_set_pause_button_contrast(node as BaseButton, true)
 	elif node is Label or node is BaseButton:
 		(node as Control).add_theme_color_override("font_color", Color.BLACK)
 		(node as Control).add_theme_color_override("font_shadow_color", Color.WHITE)
@@ -408,8 +437,8 @@ func _set_label_contrast(node: Node) -> void:
 
 
 func _clear_label_contrast(node: Node) -> void:
-	if node is BaseButton and _is_pause_art_button(node):
-		_set_pause_art_button_text_transparent(node as BaseButton)
+	if node is BaseButton and pause_overlay.is_ancestor_of(node):
+		_set_pause_button_contrast(node as BaseButton, false)
 	elif node is Label or node is BaseButton:
 		(node as Control).remove_theme_color_override("font_color")
 		(node as Control).remove_theme_color_override("font_shadow_color")
@@ -417,17 +446,24 @@ func _clear_label_contrast(node: Node) -> void:
 		_clear_label_contrast(child)
 
 
-func _is_pause_art_button(node: Node) -> bool:
-	return node == resume_button or node == pause_options_button or node == pause_exit_button or node == pause_options_back_button
-
-
-func _set_pause_art_button_text_transparent(button: BaseButton) -> void:
-	button.remove_theme_color_override("font_shadow_color")
-	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color", "font_disabled_color"]:
-		button.add_theme_color_override(state, Color(1.0, 1.0, 1.0, 0.0))
+func _set_pause_button_contrast(button: BaseButton, high: bool) -> void:
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
+		if high:
+			button.add_theme_color_override(state, Color.WHITE)
+		else:
+			button.remove_theme_color_override(state)
+	for state in ["normal", "hover", "pressed", "hover_pressed"]:
+		if high:
+			var style := button.get_theme_stylebox(state).duplicate() as StyleBoxFlat
+			if style != null:
+				style.bg_color = Color.BLACK
+				style.border_color = Color.WHITE
+				button.add_theme_stylebox_override(state, style)
+		else:
+			button.remove_theme_stylebox_override(state)
 
 func start_round() -> void:
-	if local_mode:
+	if local_mode or waiting_for_accessibility_profile or not scene_initialized or accessibility_profile.accessibleActivity == "react":
 		return
 	if not pending_attempt.is_empty():
 		return
@@ -449,7 +485,9 @@ func start_round() -> void:
 	attempts = 0
 	correct_attempts = 0
 	consecutive_wrong_answers = 0
-	game_running = true
+	game_running = false
+	round_started = true
+	round_preparing = true
 	request_pending = false
 	api_request_kind = ""
 	active_school_year = 0
@@ -468,7 +506,17 @@ func _apply_gameplay_number_font() -> void:
 
 
 func _process(delta: float) -> void:
-	if game_running:
+	if waiting_for_accessibility_profile and scene_initialized and not local_mode:
+		profile_wait_seconds += delta
+		if profile_wait_seconds >= 12.0:
+			equation_label.text = "Não conseguimos preparar o jogo."
+			hint_label.text = "Volte à atividade no site e tente novamente."
+			hint_label.visible = true
+	if round_preparing and not request_pending and pending_attempt.is_empty():
+		retry_clock -= delta
+		if retry_clock <= 0.0:
+			_request_next_question()
+	if game_running and not waiting_for_accessibility_profile and not request_pending and pending_attempt.is_empty() and not active_question.is_empty():
 		elapsed_seconds += delta
 		if accessibility_profile.pace != "untimed":
 			remaining_time = maxf(0.0, remaining_time - delta)
@@ -477,10 +525,6 @@ func _process(delta: float) -> void:
 			_spawn_wave()
 			var speed_factor := 1.0 + (float(score) / 100.0) * 0.06
 			spawn_clock = maxf(0.52, spawn_interval / speed_factor)
-		if active_question.is_empty() and not request_pending and pending_attempt.is_empty():
-			retry_clock -= delta
-			if retry_clock <= 0.0:
-				_request_next_question()
 		_update_timer()
 		if accessibility_profile.pace != "untimed" and remaining_time <= 0.0:
 			_end_round()
@@ -488,6 +532,58 @@ func _process(delta: float) -> void:
 		retry_clock -= delta
 		if retry_clock <= 0.0:
 			_send_pending_attempt()
+
+
+func _uses_static_answers() -> bool:
+	return keyboard_answers or bool(accessibility_profile.reducedMotion) or accessibility_profile.preferredInput == "keyboard"
+
+
+func _refresh_gameplay_focus(_control: Control) -> void:
+	for button in gameplay_focus_styles:
+		button.add_theme_stylebox_override("focus", gameplay_focus_styles[button] if keyboard_focus_visible else StyleBoxEmpty.new())
+	equation_card.add_theme_stylebox_override("panel", equation_focus_style if keyboard_focus_visible and equation_card.has_focus() else equation_normal_style)
+
+
+func _input(event: InputEvent) -> void:
+	if pause_overlay.visible:
+		return
+	if event is InputEventMouseButton or event is InputEventScreenTouch or (event is InputEventMouseMotion and not event.relative.is_zero_approx()):
+		keyboard_focus_visible = false
+		_refresh_gameplay_focus(null)
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	if event.ctrl_pressed or event.alt_pressed or event.meta_pressed:
+		return
+	if event.keycode in [KEY_TAB, KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+		keyboard_focus_visible = true
+		_refresh_gameplay_focus(null)
+	if event.keycode != KEY_TAB:
+		return
+	var previous := get_viewport().gui_get_focus_owner()
+	var controls: Array[Control] = []
+	if game_over_overlay.visible:
+		controls.assign([retry_button, game_over_exit_button])
+	else:
+		# Same question and choices; keyboard input uses the existing static controls.
+		keyboard_answers = true
+		candy_layer.visible = false
+		pointer_down = false
+		if not active_question.is_empty() and game_running:
+			_spawn_static_answers()
+		controls.append(equation_card)
+		for button in static_answer_buttons:
+			if button.is_visible_in_tree() and not button.disabled:
+				controls.append(button)
+		controls.append(pause_button)
+	var eligible: Array[Control] = []
+	for control in controls:
+		if control.is_visible_in_tree() and control.focus_mode != Control.FOCUS_NONE and not (control is BaseButton and control.disabled):
+			eligible.append(control)
+	if not eligible.is_empty():
+		var index := eligible.find(previous)
+		index = (eligible.size() - 1 if event.shift_pressed else 0) if index < 0 else posmod(index + (-1 if event.shift_pressed else 1), eligible.size())
+		eligible[index].grab_focus()
+	get_viewport().set_input_as_handled()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -499,7 +595,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_smash_answer_index(event.keycode - KEY_1)
 			return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE and not game_running:
-		SceneFlow.change_scene("res://scenes/menu.tscn")
+		_exit_to_menu()
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		pointer_down = event.pressed
@@ -560,7 +656,7 @@ func _answer_choices_for_question() -> Array[int]:
 func _spawn_wave() -> void:
 	if active_question.is_empty():
 		return
-	if accessibility_profile.reducedMotion:
+	if _uses_static_answers():
 		_spawn_static_answers()
 		return
 	if active_answer_choices.is_empty():
@@ -584,7 +680,7 @@ func _spawn_wave() -> void:
 func _smash_answer_index(index: int) -> void:
 	if not game_running or request_pending:
 		return
-	if accessibility_profile.reducedMotion:
+	if _uses_static_answers():
 		_on_static_answer_pressed(index)
 		return
 	var candies := candy_layer.get_children()
@@ -596,7 +692,7 @@ func _smash_answer_index(index: int) -> void:
 
 
 func _spawn_static_answers() -> void:
-	if active_question.is_empty() or not accessibility_profile.reducedMotion or static_answer_panel.visible:
+	if active_question.is_empty() or not _uses_static_answers() or static_answer_panel.visible:
 		return
 	for child in candy_layer.get_children():
 		child.queue_free()
@@ -608,15 +704,18 @@ func _spawn_static_answers() -> void:
 		if not answer_button.visible:
 			continue
 		answer_button.text = str(active_answer_choices[index])
+		answer_button.accessibility_name = "Resposta %d: %s" % [index + 1, answer_button.text]
 		answer_button.set_meta("answer_value", active_answer_choices[index])
-		answer_button.disabled = false
-	static_answer_prompt.text = "Toque ou clique em uma resposta"
+		answer_button.disabled = request_pending or not pending_attempt.is_empty()
+	static_answer_prompt.text = ""
 	static_answer_panel.visible = true
+	if keyboard_focus_visible and get_viewport().gui_get_focus_owner() == null and not request_pending and not pause_overlay.visible:
+		static_answer_buttons[0].grab_focus()
 	spawn_clock = 3600.0
 
 
 func _on_static_answer_pressed(index: int) -> void:
-	if not accessibility_profile.reducedMotion or not static_answer_panel.visible:
+	if not _uses_static_answers() or not static_answer_panel.visible:
 		return
 	if index < 0 or index >= static_answer_buttons.size():
 		return
@@ -658,7 +757,7 @@ func _on_equation_card_gui_input(event: InputEvent) -> void:
 	elif event is InputEventScreenTouch and event.pressed:
 		equation_card.accept_event()
 		_read_current_question()
-	elif event is InputEventKey and event.pressed and (event.keycode == KEY_ENTER or event.keycode == KEY_SPACE):
+	elif event is InputEventKey and event.pressed and event.keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
 		equation_card.accept_event()
 		_read_current_question()
 
@@ -667,6 +766,12 @@ func _announce_equation_repeat_hint() -> void:
 	if active_question.is_empty():
 		return
 	AudioManager.speak_hover("Aperte mais uma vez para repetir a conta.", equation_card)
+
+
+func _announce_equation_focus() -> void:
+	if active_question.is_empty():
+		return
+	AudioManager.speak_accessibility("Pergunta. Pressione Enter para repetir a pergunta.")
 
 
 func _announce_static_answer_hover(index: int) -> void:
@@ -683,7 +788,7 @@ func _announce_answer_value(value: int, hover_source: Object = null) -> void:
 	if hover_source != null:
 		AudioManager.speak_hover("Opção, %d, clique para confirmar." % value, hover_source)
 	else:
-		AudioManager.speak_accessibility("Opção, %d, clique para confirmar." % value)
+		AudioManager.speak_accessibility("Opção, %d. Aperte Enter para confirmar." % value)
 
 
 func _speak_game_button(text: String, hover_source: Object = null) -> void:
@@ -736,6 +841,11 @@ func _make_choices(answer: int) -> Array[int]:
 
 
 func _request_next_question() -> void:
+	if waiting_for_accessibility_profile:
+		return
+	game_running = false
+	round_preparing = true
+	_show_waiting_for_challenge()
 	_stop_current_reading()
 	active_question.clear()
 	active_answer_choices.clear()
@@ -746,12 +856,14 @@ func _request_next_question() -> void:
 		selected_operation = selected_operations.pick_random()
 	if local_mode:
 		game_running = false
+		round_preparing = false
 		equation_label.text = "Entre pelo Project Gauss para jogar."
-		hint_label.text = "A sessao autenticada e necessaria para buscar questoes e registrar seu progresso."
+		hint_label.text = "Abra o jogo pela sua atividade no site."
 		return
 	if lesson_mode:
 		if lesson_code.is_empty() or lesson_phase.is_empty() or lesson_version < 1 or lesson_goal < 1:
 			game_running = false
+			round_preparing = false
 			equation_label.text = "Não foi possível identificar a etapa da aula."
 			return
 		var query := "gameId=%s&operation=%s&practiceMode=lesson&lessonCode=%s&lessonVersion=%d&phaseId=%s" % [game_id.uri_encode(), lesson_operation.uri_encode(), lesson_code.uri_encode(), lesson_version, lesson_phase.uri_encode()]
@@ -780,7 +892,8 @@ func _request_next_question() -> void:
 		return
 	active_question = _build_generated_question()
 	_equation_for(active_question)
-	if accessibility_profile.reducedMotion:
+	_activate_question()
+	if _uses_static_answers():
 		_spawn_static_answers()
 	else:
 		_spawn_wave()
@@ -791,6 +904,13 @@ func _request_next_question() -> void:
 		game_running = false
 		equation_label.text = "Sem contas agora"
 		hint_label.text = "Ainda não há contas dessa operação para sua série."
+
+
+func _activate_question() -> void:
+	round_preparing = false
+	game_running = true
+	hint_label.visible = bool(settings.show_hints)
+	_update_answer_instructions()
 
 
 func _build_generated_question() -> Dictionary:
@@ -992,9 +1112,7 @@ func _equation_for(question: Dictionary) -> void:
 
 func _update_answer_instructions() -> void:
 	var input_text := "Toque ou clique no número certo."
-	if accessibility_profile.reducedMotion:
-		input_text = "Toque ou clique no número certo."
-	elif accessibility_profile.preferredInput == "touch":
+	if accessibility_profile.preferredInput == "touch":
 		input_text = "Toque no doce que tem a resposta."
 	else:
 		input_text = "Toque ou clique no doce com a resposta."
@@ -1071,14 +1189,15 @@ func _submit_answer(answer_value: int, hit_position: Vector2, selected_candy: Ga
 			else:
 				remaining_candy.fall_away()
 	spawn_clock = maxf(spawn_clock, 0.85)
-	if accessibility_profile.reducedMotion:
+	if _uses_static_answers():
+		pending_answer_focus = get_viewport().gui_get_focus_owner() as Button
 		_set_static_answer_buttons_disabled(true)
 	if local_mode:
 		_resolve_attempt(answer_value == _question_target(active_question), answer_value)
 		return
 	if lesson_mode:
 		pending_attempt = {
-			"eventId": _event_id(), "type": "attempt_submitted", "gameId": game_id,
+			"eventId": _event_id(), "type": "attempt_submitted", "gameId": active_question.gameId,
 			"lessonId": active_question.lessonId, "lessonVersion": active_question.lessonVersion,
 			"phaseId": active_question.phaseId, "exerciseId": active_question.exerciseId,
 			"choice": answer_value, "practiceMode": "lesson",
@@ -1104,6 +1223,8 @@ func _submit_answer(answer_value: int, hit_position: Vector2, selected_candy: Ga
 func _set_static_answer_buttons_disabled(disabled: bool) -> void:
 	for answer_button in static_answer_buttons:
 		answer_button.disabled = disabled
+	if not disabled and keyboard_focus_visible and is_instance_valid(pending_answer_focus) and pending_answer_focus.is_visible_in_tree() and not pause_overlay.visible and not game_over_overlay.visible:
+		pending_answer_focus.grab_focus()
 
 
 func _send_pending_attempt() -> void:
@@ -1129,13 +1250,16 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 	request_pending = false
 	var completed_request_kind := api_request_kind
 	api_request_kind = ""
-	var parsed: Variant = JSON.parse_string(_decode_response_body(body))
 	if result != HTTPRequest.RESULT_SUCCESS or response_code >= 500 or response_code == 0:
 		if not pending_attempt.is_empty():
+			hint_label.text = "Ainda estamos conferindo sua resposta. Seu tempo está parado."
+			hint_label.visible = true
 			retry_clock = 2.5
 			return
-		if game_running and active_question.is_empty():
-			hint_label.text = "A conta não carregou. Tentando conectar de novo…"
+		if round_preparing and active_question.is_empty():
+			equation_label.text = "O desafio ainda não chegou."
+			hint_label.text = "Vamos tentar de novo. Seu tempo está parado."
+			hint_label.visible = true
 			retry_clock = 2.5
 			return
 	if response_code < 200 or response_code >= 300:
@@ -1144,23 +1268,34 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 		if response_code == 404 and completed_request_kind == "question" and _request_question_for_next_practice_set():
 			return
 		game_running = false
+		round_preparing = false
 		if response_code == 404:
 			equation_label.text = "Sem contas agora"
 			hint_label.text = "Ainda não há contas dessa operação para sua série."
 		else:
-			equation_label.text = "Não foi possível carregar as contas da API."
-			hint_label.text = "Confira sua sessão Project Gauss e tente novamente."
+			equation_label.text = "Não conseguimos abrir o desafio."
+			hint_label.text = "Volte à atividade no site e tente novamente."
 		return
+	var response_json := JSON.new()
+	var parse_result := response_json.parse(_decode_response_body(body))
+	var parsed: Variant = response_json.data if parse_result == OK else null
 	if not parsed is Dictionary:
+		if completed_request_kind in ["attempt", "generated_attempt"] and not pending_attempt.is_empty():
+			hint_label.text = "Ainda estamos conferindo sua resposta. Seu tempo está parado."
+			hint_label.visible = true
+			retry_clock = 2.5
+			return
 		game_running = false
-		equation_label.text = "A API enviou uma conta em formato inesperado."
+		round_preparing = false
+		equation_label.text = "Não conseguimos abrir este desafio."
 		return
 	if completed_request_kind == "school_year":
 		var received_year := int(parsed.get("schoolYear", 0))
 		if received_year < 1 or received_year > 12:
 			game_running = false
-			equation_label.text = "A API enviou uma série inválida."
-			hint_label.text = "A questão não foi iniciada sem uma série escolar válida."
+			round_preparing = false
+			equation_label.text = "Não conseguimos preparar seu desafio."
+			hint_label.text = "Volte à atividade no site e tente novamente."
 			return
 		active_school_year = received_year
 		if active_school_year < MULTIPLICATION_UNLOCK_YEAR:
@@ -1171,10 +1306,17 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 			selected_operation = selected_operations.pick_random()
 		_request_next_question()
 		return
-	if parsed.has("correct"):
+	if completed_request_kind in ["attempt", "generated_attempt"]:
+		if not trophies.valid_attempt(parsed, pending_attempt):
+			# Keep the exact eventId/payload for an idempotent retry. Never award locally.
+			hint_label.text = "Ainda estamos conferindo sua resposta. Seu tempo está parado."
+			hint_label.visible = true
+			retry_clock = 2.5
+			return
+		trophies.confirm_attempt(parsed)
 		pending_attempt.clear()
 		_resolve_attempt(bool(parsed.correct), int(parsed.get("pointsDelta", 0)), true)
-		if not bool(parsed.correct) and accessibility_profile.reducedMotion:
+		if not bool(parsed.correct) and _uses_static_answers():
 			_set_static_answer_buttons_disabled(false)
 		var feedback: Variant = parsed.get("feedback", {})
 		if not bool(parsed.correct) and feedback is Dictionary and not str(feedback.get("reason", "")).is_empty():
@@ -1184,8 +1326,10 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 		for field in required_question_fields:
 			if not parsed.has(field):
 				game_running = false
-				equation_label.text = "A API enviou uma questão incompleta."
-				hint_label.text = "A questão não foi iniciada porque faltam dados oficiais para registrar sua resposta."
+				round_preparing = false
+				hint_label.visible = true
+				equation_label.text = "Não conseguimos abrir este desafio."
+				hint_label.text = "Volte à atividade no site e tente novamente."
 				return
 		var received_operation: Variant = parsed.get("operation")
 		var received_lesson_version := int(parsed.get("lessonVersion", 0))
@@ -1193,13 +1337,17 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 		for field in received_ids:
 			if str(parsed.get(field, "")).strip_edges().is_empty():
 				game_running = false
-				equation_label.text = "A API enviou uma questão incompleta."
-				hint_label.text = "Faltam identificadores oficiais para registrar esta resposta."
+				round_preparing = false
+				hint_label.visible = true
+				equation_label.text = "Não conseguimos abrir este desafio."
+				hint_label.text = "Volte à atividade no site e tente novamente."
 				return
 		if received_lesson_version < 1 or not received_operation is Dictionary or not received_operation.get("operands", []) is Array or received_operation.operands.size() < 2:
 			game_running = false
-			equation_label.text = "A API enviou uma questão em formato inesperado."
-			hint_label.text = "A rodada não começou para evitar registrar uma resposta inválida."
+			round_preparing = false
+			hint_label.visible = true
+			equation_label.text = "Não conseguimos abrir este desafio."
+			hint_label.text = "Volte à atividade no site e tente novamente."
 			return
 		answer_feedback_label.visible = false
 		active_question = parsed
@@ -1209,9 +1357,10 @@ func _on_api_request_completed(result: int, response_code: int, _headers: Packed
 		active_answer_choices.clear()
 		selected_operation = str(received_operation.get("kind", selected_operation))
 		_equation_for(active_question)
+		_activate_question()
 		hint_label.text = "Acerte um doce com o número!"
 		request_pending = false
-		if accessibility_profile.reducedMotion:
+		if _uses_static_answers():
 			_spawn_static_answers()
 		else:
 			_spawn_wave()
@@ -1371,14 +1520,17 @@ func _update_timer() -> void:
 	var accessibility_scale := float(accessibility_profile.textScale)
 	if accessibility_profile.pace == "untimed":
 		timer_label.text = "TEMPO: ∞"
+		timer_label.accessibility_name = "Tempo sem limite"
+		# Bundled Godot font supports U+221E on Web without a system font.
+		timer_label.add_theme_font_override("font", ThemeDB.fallback_font)
 		timer_label.add_theme_font_size_override("font_size", maxi(12, roundi(float(base_font_size) * 1.35 * accessibility_scale)))
 		timer_label.modulate = Color.WHITE
 		return
 	timer_label.add_theme_font_size_override("font_size", maxi(12, roundi(float(base_font_size) * accessibility_scale)))
+	timer_label.remove_theme_font_override("font")
 	var seconds_to_display := int(ceil(remaining_time))
-	if round_seconds <= 60.0:
-		seconds_to_display -= 1
 	timer_label.text = "TEMPO: %d" % maxi(seconds_to_display, 0)
+	timer_label.accessibility_name = timer_label.text
 	if remaining_time <= 10.0:
 		timer_label.modulate = Color(1.0, 0.35, 0.23)
 	else:
@@ -1401,23 +1553,32 @@ func _end_round() -> void:
 	game_over_score.text = str(score)
 	game_over_correct.text = str(correct_attempts)
 	game_over_attempts.text = str(attempts)
+	game_over_score.accessibility_name = "Pontos: %d" % score
+	game_over_correct.accessibility_name = "Acertos: %d" % correct_attempts
+	game_over_attempts.accessibility_name = "Tentativas: %d" % attempts
 	game_over_overlay.visible = true
+	retry_button.grab_focus()
 	hint_label.text = "FIM DE JOGO"
 	AudioManager.speak_accessibility(
-		"O tempo acabou. Você marcou %d pontos e acertou %d contas." % [score, correct_attempts],
+		"O tempo acabou. Você marcou %d pontos, acertou %d contas em %d tentativas." % [score, correct_attempts, attempts],
 		true
 	)
 
 
 func _open_pause() -> void:
-	if not game_running:
+	if game_over_overlay.visible:
 		return
 	_stop_current_reading()
 	pause_menu.visible = true
 	pause_options.visible = false
 	pause_art.visible = true
-	pause_options_art.visible = false
 	pause_overlay.visible = true
+	pause_previous_focus = get_viewport().gui_get_focus_owner()
+	for control in $HUD/Root.find_children("*", "Control", true, false):
+		if control.focus_mode != Control.FOCUS_NONE and not pause_overlay.is_ancestor_of(control):
+			pause_focus_modes[control] = control.focus_mode
+			control.focus_mode = Control.FOCUS_NONE
+	resume_button.grab_focus()
 	pointer_down = false
 	get_tree().paused = true
 	AudioManager.play_ui()
@@ -1426,6 +1587,16 @@ func _open_pause() -> void:
 func _resume_game() -> void:
 	pause_overlay.visible = false
 	get_tree().paused = false
+	for control in pause_focus_modes:
+		if is_instance_valid(control):
+			control.focus_mode = pause_focus_modes[control]
+	pause_focus_modes.clear()
+	if is_instance_valid(pause_previous_focus) and pause_previous_focus.is_visible_in_tree():
+		pause_previous_focus.grab_focus()
+	else:
+		pause_button.grab_focus()
+	if not round_started and not waiting_for_accessibility_profile:
+		start_round()
 	AudioManager.play_ui()
 	AudioManager.speak_accessibility("Continuando o jogo.", true)
 
@@ -1434,7 +1605,7 @@ func _show_pause_options() -> void:
 	pause_menu.visible = false
 	pause_options.visible = true
 	pause_art.visible = false
-	pause_options_art.visible = true
+	music_check.grab_focus()
 	AudioManager.play_ui()
 	AudioManager.speak_accessibility("Opções abertas.", true)
 
@@ -1443,8 +1614,15 @@ func _show_pause_menu() -> void:
 	pause_options.visible = false
 	pause_menu.visible = true
 	pause_art.visible = true
-	pause_options_art.visible = false
+	pause_options_button.grab_focus()
 	AudioManager.play_ui()
+
+
+func _on_pause_cancel() -> void:
+	if pause_options.visible:
+		_show_pause_menu()
+	else:
+		_resume_game()
 
 
 func _pause_option_toggled(enabled: bool, option_name: String) -> void:
@@ -1461,7 +1639,6 @@ func _pause_option_toggled(enabled: bool, option_name: String) -> void:
 	config.load("user://ninja_matematica.cfg")
 	config.set_value("options", option_name, enabled)
 	config.save("user://ninja_matematica.cfg")
-	_sync_pause_toggle_art()
 	AudioManager.play_ui()
 	AudioManager.speak_option_state(option_name, enabled)
 
@@ -1486,19 +1663,6 @@ func _announce_pause_options_back_hover(hover_source: Object = null) -> void:
 		AudioManager.speak_accessibility("Voltar ao menu da pausa.")
 
 
-func _sync_pause_toggle_art() -> void:
-	if not is_node_ready():
-		return
-	var states := [music_check.button_pressed, sfx_check.button_pressed, hints_check.button_pressed, fullscreen_check.button_pressed]
-	for index in range(states.size()):
-		var enabled: bool = states[index]
-		var track := StyleBoxFlat.new()
-		track.bg_color = Color("#f32678") if enabled else Color("#555255")
-		track.set_corner_radius_all(18)
-		pause_toggle_tracks[index].add_theme_stylebox_override("panel", track)
-		pause_toggle_knobs[index].position.x = 36.0 if enabled else 3.0
-
-
 func _retry_round() -> void:
 	if not pending_attempt.is_empty():
 		return
@@ -1507,6 +1671,12 @@ func _retry_round() -> void:
 
 
 func _exit_to_menu() -> void:
+	if not pending_attempt.is_empty():
+		if pause_overlay.visible:
+			_resume_game()
+		hint_label.text = "Aguarde a confirmação da sua resposta antes de sair."
+		hint_label.visible = true
+		return
 	get_tree().paused = false
 	AudioManager.play_ui()
 	AudioManager.speak_accessibility("Indo para o menu.", true)

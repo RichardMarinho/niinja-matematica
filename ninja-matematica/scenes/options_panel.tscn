@@ -1,0 +1,123 @@
+[gd_scene format=3]
+
+[ext_resource type="Texture2D" path="res://assets/options_clean_reference.png" id="background"]
+[ext_resource type="Texture2D" path="res://assets/ui_back.svg" id="back"]
+[ext_resource type="Theme" path="res://assets/candy_ui_theme.tres" id="theme"]
+[ext_resource type="Script" path="res://scripts/reference_frame.gd" id="frame"]
+
+[sub_resource type="AtlasTexture" id="music_icon"]
+atlas = ExtResource("background")
+region = Rect2(430, 260, 82, 82)
+
+[sub_resource type="AtlasTexture" id="sfx_icon"]
+atlas = ExtResource("background")
+region = Rect2(430, 365, 82, 82)
+
+[sub_resource type="AtlasTexture" id="hints_icon"]
+atlas = ExtResource("background")
+region = Rect2(430, 469, 82, 82)
+
+[sub_resource type="AtlasTexture" id="fullscreen_icon"]
+atlas = ExtResource("background")
+region = Rect2(430, 575, 82, 82)
+
+[node name="OptionsPanel" type="Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("theme")
+script = ExtResource("frame")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("background")
+expand_mode = 1
+
+[node name="Content" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+
+[node name="MusicCheck" type="CheckButton" parent="Content"]
+layout_mode = 0
+offset_left = 306.0
+offset_top = 194.0
+offset_right = 972.0
+offset_bottom = 268.0
+theme_type_variation = &"OptionsToggle"
+theme_override_font_sizes/font_size = 26
+theme_override_constants/icon_max_width = 50
+icon = SubResource("music_icon")
+text = "Música"
+accessibility_name = "Música"
+metadata/narration_key = "game:ninja-matematica:options:music"
+
+[node name="SfxCheck" type="CheckButton" parent="Content"]
+layout_mode = 0
+offset_left = 306.0
+offset_top = 275.0
+offset_right = 972.0
+offset_bottom = 349.0
+theme_type_variation = &"OptionsToggle"
+theme_override_font_sizes/font_size = 26
+theme_override_constants/icon_max_width = 50
+icon = SubResource("sfx_icon")
+text = "Efeitos sonoros"
+accessibility_name = "Efeitos sonoros"
+metadata/narration_key = "game:ninja-matematica:options:sfx"
+
+[node name="HintsCheck" type="CheckButton" parent="Content"]
+layout_mode = 0
+offset_left = 306.0
+offset_top = 356.0
+offset_right = 972.0
+offset_bottom = 430.0
+theme_type_variation = &"OptionsToggle"
+theme_override_font_sizes/font_size = 26
+theme_override_constants/icon_max_width = 50
+icon = SubResource("hints_icon")
+text = "Dicas durante a partida"
+accessibility_name = "Dicas durante a partida"
+metadata/narration_key = "game:ninja-matematica:options:hints"
+
+[node name="FullscreenCheck" type="CheckButton" parent="Content"]
+layout_mode = 0
+offset_left = 306.0
+offset_top = 437.0
+offset_right = 972.0
+offset_bottom = 511.0
+theme_type_variation = &"OptionsToggle"
+theme_override_font_sizes/font_size = 26
+theme_override_constants/icon_max_width = 50
+icon = SubResource("fullscreen_icon")
+text = "Tela cheia"
+accessibility_name = "Tela cheia"
+metadata/narration_key = "game:ninja-matematica:options:fullscreen"
+
+[node name="BackButton" type="Button" parent="Content"]
+layout_mode = 0
+offset_left = 470.0
+offset_top = 542.0
+offset_right = 810.0
+offset_bottom = 614.0
+theme_type_variation = &"PurpleButton"
+theme_override_font_sizes/font_size = 30
+theme_override_constants/icon_max_width = 32
+icon = ExtResource("back")
+text = "VOLTAR"
+accessibility_name = "Voltar"
+metadata/narration_key = "game:ninja-matematica:options:back"
+

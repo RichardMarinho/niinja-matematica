@@ -1,84 +1,87 @@
 [gd_scene format=3 uid="uid://dewo6js5cknwo"]
 
-[ext_resource type="Texture2D" uid="uid://cffiidhyayemx" path="res://assets/menu_reference.png" id="1_bg"]
-[ext_resource type="Script" uid="uid://ccqhdj05vyuff" path="res://scripts/menu.gd" id="2_script"]
+[ext_resource type="Texture2D" path="res://assets/ui_play.svg" id="play_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui_gear.svg" id="gear_icon"]
+[ext_resource type="Texture2D" path="res://assets/ui_back.svg" id="back_icon"]
+[ext_resource type="Script" path="res://scripts/menu_focus_visibility.gd" id="focus_visibility"]
+[ext_resource type="Texture2D" path="res://assets/menu_clean_background.png" id="1_bg"]
+[ext_resource type="Script" path="res://scripts/menu.gd" id="2_script"]
+[ext_resource type="Theme" path="res://assets/candy_ui_theme.tres" id="3_theme"]
+[ext_resource type="Script" path="res://scripts/candy_background.gd" id="4_bg_script"]
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hit_area"]
-
-[node name="Menu" type="Node2D" unique_id=2092906619]
+[node name="Menu" type="Node2D"]
 script = ExtResource("2_script")
 
-[node name="Background" type="Sprite2D" parent="." unique_id=1600431814]
-position = Vector2(640, 360)
-scale = Vector2(0.7655, 0.7655)
-texture = ExtResource("1_bg")
+[node name="HUD" type="CanvasLayer" parent="."]
 
-[node name="HUD" type="CanvasLayer" parent="." unique_id=1635934497]
-
-[node name="Root" type="Control" parent="HUD" unique_id=1437746465]
-layout_mode = 3
+[node name="Root" type="Control" parent="HUD"]
+layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 1
+clip_contents = true
+theme = ExtResource("3_theme")
 
-[node name="PlayButton" type="Button" parent="HUD/Root" unique_id=64992617]
+[node name="Background" type="Control" parent="HUD/Root"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -162.0
-offset_top = 28.0
-offset_right = 173.0
-offset_bottom = 122.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+mouse_filter = 2
+script = ExtResource("4_bg_script")
+texture = ExtResource("1_bg")
 
-[node name="OptionsButton" type="Button" parent="HUD/Root" unique_id=879650428]
+[node name="PlayButton" type="Button" parent="HUD/Root"]
+accessibility_name = "Jogar"
+metadata/narration_key = "game:ninja-matematica:menu:play"
 layout_mode = 1
-anchors_preset = 8
 anchor_left = 0.5
-anchor_top = 0.5
 anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -154.0
-offset_top = 132.0
-offset_right = 159.0
-offset_bottom = 203.0
-grow_horizontal = 2
-grow_vertical = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+offset_left = -190.0
+offset_right = 190.0
+offset_top = 426.0
+offset_bottom = 508.0
+theme_type_variation = &"Button"
+theme_override_font_sizes/font_size = 42
+text = "JOGAR"
+icon = ExtResource("play_icon")
+theme_override_constants/icon_max_width = 42
 
-[node name="QuitButton" type="Button" parent="HUD/Root" unique_id=626879949]
+[node name="OptionsButton" type="Button" parent="HUD/Root"]
+accessibility_name = "Opções"
+metadata/narration_key = "game:ninja-matematica:menu:options"
 layout_mode = 1
-anchors_preset = 8
 anchor_left = 0.5
-anchor_top = 0.5
 anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -152.0
-offset_top = 216.0
-offset_right = 150.0
-offset_bottom = 293.0
-grow_horizontal = 2
-grow_vertical = 2
-focus_mode = 0
-theme_override_styles/normal = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/pressed = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/hover = SubResource("StyleBoxEmpty_hit_area")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_hit_area")
+offset_left = -190.0
+offset_right = 190.0
+offset_top = 524.0
+offset_bottom = 598.0
+theme_type_variation = &"PurpleButton"
+theme_override_font_sizes/font_size = 34
+text = "OPÇÕES"
+icon = ExtResource("gear_icon")
+theme_override_constants/icon_max_width = 40
 
-[connection signal="draw" from="Background" to="." method="_on_background_draw"]
+[node name="FocusVisibility" type="Node" parent="HUD/Root"]
+script = ExtResource("focus_visibility")
+
+[node name="ExitButton" type="Button" parent="HUD/Root"]
+accessibility_name = "Sair e voltar ao site"
+metadata/narration_key = "game:ninja-matematica:menu:exit"
+layout_mode = 1
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -190.0
+offset_right = 190.0
+offset_top = 614.0
+offset_bottom = 688.0
+theme_type_variation = &"GoldButton"
+theme_override_font_sizes/font_size = 34
+text = "SAIR"
+icon = ExtResource("back_icon")
+theme_override_constants/icon_max_width = 36

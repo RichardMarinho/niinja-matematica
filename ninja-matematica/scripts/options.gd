@@ -2,26 +2,11 @@ extends Node2D
 
 const SETTINGS_PATH := "user://ninja_matematica.cfg"
 
-@onready var music_check: CheckButton = $HUD/Root/Center/Card/Content/MusicCheck
-@onready var sfx_check: CheckButton = $HUD/Root/Center/Card/Content/SfxCheck
-@onready var hints_check: CheckButton = $HUD/Root/Center/Card/Content/HintsCheck
-@onready var fullscreen_check: CheckButton = $HUD/Root/Center/Card/Content/FullscreenCheck
-@onready var back_button: Button = $HUD/Root/Center/Card/Content/BackButton
-@onready var toggle_art: Control = $HUD/Root/ToggleArt
-@onready var toggle_tracks: Array[Panel] = [
-	$HUD/Root/ToggleArt/MusicTrack,
-	$HUD/Root/ToggleArt/SfxTrack,
-	$HUD/Root/ToggleArt/HintsTrack,
-	$HUD/Root/ToggleArt/FullscreenTrack,
-]
-@onready var toggle_knobs: Array[Panel] = [
-	$HUD/Root/ToggleArt/MusicTrack/MusicKnob,
-	$HUD/Root/ToggleArt/SfxTrack/SfxKnob,
-	$HUD/Root/ToggleArt/HintsTrack/HintsKnob,
-	$HUD/Root/ToggleArt/FullscreenTrack/FullscreenKnob,
-]
-
-
+@onready var music_check: CheckButton = $HUD/Root/OptionsPanel/Content/MusicCheck
+@onready var sfx_check: CheckButton = $HUD/Root/OptionsPanel/Content/SfxCheck
+@onready var hints_check: CheckButton = $HUD/Root/OptionsPanel/Content/HintsCheck
+@onready var fullscreen_check: CheckButton = $HUD/Root/OptionsPanel/Content/FullscreenCheck
+@onready var back_button: Button = $HUD/Root/OptionsPanel/Content/BackButton
 func _ready() -> void:
 	if not SceneFlow.enter_scene_from_menu():
 		return
@@ -54,7 +39,7 @@ func _ready() -> void:
 	AudioManager.set_music_enabled(music_check.button_pressed)
 	AudioManager.set_sfx_enabled(sfx_check.button_pressed)
 	AudioManager.set_fullscreen(fullscreen_check.button_pressed)
-	_sync_toggle_art()
+	music_check.grab_focus()
 
 
 func _music_toggled(enabled: bool) -> void:
@@ -82,7 +67,6 @@ func _fullscreen_toggled(enabled: bool) -> void:
 	_save_option("fullscreen", enabled)
 	AudioManager.play_ui()
 	AudioManager.speak_option_state("fullscreen", enabled)
-	_sync_toggle_art()
 
 
 func _announce_option_hover(option_name: String, hover_source: Object = null) -> void:
@@ -107,20 +91,6 @@ func _save_option(option_name: String, enabled: bool) -> void:
 	config.load(SETTINGS_PATH)
 	config.set_value("options", option_name, enabled)
 	config.save(SETTINGS_PATH)
-	_sync_toggle_art()
-
-
-func _sync_toggle_art() -> void:
-	if not is_node_ready():
-		return
-	var states := [music_check.button_pressed, sfx_check.button_pressed, hints_check.button_pressed, fullscreen_check.button_pressed]
-	for index in range(states.size()):
-		var enabled: bool = states[index]
-		var track := StyleBoxFlat.new()
-		track.bg_color = Color("#f32678") if enabled else Color("#555255")
-		track.set_corner_radius_all(18)
-		toggle_tracks[index].add_theme_stylebox_override("panel", track)
-		toggle_knobs[index].position.x = 36.0 if enabled else 3.0
 
 
 func _back_to_menu() -> void:

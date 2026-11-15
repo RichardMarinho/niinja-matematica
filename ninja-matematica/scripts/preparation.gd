@@ -2,11 +2,12 @@ extends Node2D
 
 const SETTINGS_PATH := "user://ninja_matematica.cfg"
 const MULTIPLICATION_UNLOCK_YEAR := 3
+const SELECTED_ICON := preload("res://assets/ui_check.svg")
 
 @export var api_base_url := "http://127.0.0.1:3001"
 @onready var api: HTTPRequest = $API
 
-@onready var help_button: Button = $HUD/Root/Center/Card/Content/DifficultyHelpButton
+@onready var help_button: Button = $HUD/Root/Center/Card/Content/DifficultyHeading/DifficultyHelpButton
 @onready var help_overlay: Control = $HUD/Root/DifficultyHelp
 @onready var help_close_button: Button = $HUD/Root/DifficultyHelp/HelpCard/HelpContent/HelpCloseButton
 @onready var difficulty_buttons: Control = $HUD/Root/Center/Card/Content/DifficultyButtons
@@ -17,26 +18,9 @@ const MULTIPLICATION_UNLOCK_YEAR := 3
 @onready var subtraction_check: CheckButton = $HUD/Root/Center/Card/Content/OperationButtons/SubtractionCheck
 @onready var multiplication_check: CheckButton = $HUD/Root/Center/Card/Content/OperationButtons/MultiplicationCheck
 @onready var division_check: CheckButton = $HUD/Root/Center/Card/Content/OperationButtons/DivisionCheck
-@onready var multiplication_lock: TextureRect = $HUD/Root/Center/OperationToggleArt/MultiplicationLock
-@onready var division_lock: TextureRect = $HUD/Root/Center/OperationToggleArt/DivisionLock
-@onready var multiplication_disabled_overlay: Panel = $HUD/Root/Center/Card/Content/OperationButtons/MultiplicationDisabledOverlay
-@onready var division_disabled_overlay: Panel = $HUD/Root/Center/Card/Content/OperationButtons/DivisionDisabledOverlay
 @onready var status_label: Label = $HUD/Root/Center/Card/Content/Status
 @onready var back_button: Button = $HUD/Root/Center/Card/Content/Actions/BackButton
 @onready var start_button: Button = $HUD/Root/Center/Card/Content/Actions/StartButton
-@onready var start_disabled_overlay: Panel = $HUD/Root/Center/StartDisabledOverlay
-@onready var operation_tracks: Array[Panel] = [
-	$HUD/Root/Center/OperationToggleArt/AdditionTrack,
-	$HUD/Root/Center/OperationToggleArt/SubtractionTrack,
-	$HUD/Root/Center/OperationToggleArt/MultiplicationTrack,
-	$HUD/Root/Center/OperationToggleArt/DivisionTrack,
-]
-@onready var operation_knobs: Array[Panel] = [
-	$HUD/Root/Center/OperationToggleArt/AdditionTrack/AdditionKnob,
-	$HUD/Root/Center/OperationToggleArt/SubtractionTrack/SubtractionKnob,
-	$HUD/Root/Center/OperationToggleArt/MultiplicationTrack/MultiplicationKnob,
-	$HUD/Root/Center/OperationToggleArt/DivisionTrack/DivisionKnob,
-]
 
 var selected_difficulty := ""
 var selected_operations: Array[String] = []
@@ -45,11 +29,14 @@ var active_school_year := 0
 var school_year_load_failed := false
 var suppress_operation_speech := false
 var preparation_intro_spoken := false
+var help_focus_modes: Dictionary = {}
 
 
 func _ready() -> void:
 	if not SceneFlow.enter_scene_from_menu():
 		return
+	$HUD/Root.resized.connect(_layout_reference_frame)
+	_layout_reference_frame()
 	AudioManager.accessibility_profile_updated.connect(_on_accessibility_profile_updated)
 	api.request_completed.connect(_on_school_year_loaded)
 	help_overlay.visible = false
@@ -89,6 +76,27 @@ func _ready() -> void:
 	_apply_operation_access()
 	_request_school_year()
 	call_deferred("_speak_preparation_intro")
+	for button in [easy_button, normal_button, hard_button]:
+		button.focus_entered.connect(_speak_difficulty_hover.bind(_difficulty_id(button.name)))
+	for operation in ["addition", "subtraction", "multiplication", "division"]:
+		_operation_button(operation).focus_entered.connect(_speak_operation_hover.bind(operation))
+	back_button.focus_entered.connect(_speak_accessibility_text.bind("Voltar ao menu."))
+	start_button.focus_entered.connect(_on_start_hovered)
+	help_button.focus_entered.connect(_speak_accessibility_text.bind("Ajuda sobre os níveis de dificuldade."))
+	help_close_button.focus_entered.connect(_speak_accessibility_text.bind("Fechar ajuda."))
+	easy_button.grab_focus()
+
+
+func _layout_reference_frame() -> void:
+	# Keep opaque controls aligned with the reference art at every window ratio.
+	var available: Vector2 = $HUD/Root.size
+	var reference := Vector2(1280, 720)
+	var fit := minf(available.x / reference.x, available.y / reference.y)
+	for frame in [$HUD/Root/Background, $HUD/Root/Center]:
+		frame.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+		frame.size = reference
+		frame.scale = Vector2(fit, fit)
+		frame.position = (available - reference * fit) * 0.5
 
 
 func _on_accessibility_profile_updated() -> void:
@@ -181,32 +189,42 @@ func _apply_operation_access() -> void:
 	var operations_unlocked := active_school_year >= MULTIPLICATION_UNLOCK_YEAR
 	multiplication_check.disabled = not operations_unlocked
 	division_check.disabled = not operations_unlocked
+	var eligibility_text := "Entre pelo Project Gauss para confirmar sua série." if active_school_year <= 0 else "Multiplicação e divisão: a partir do 3º ano."
+	for button in [multiplication_check, division_check]:
+		button.tooltip_text = eligibility_text if not operations_unlocked else ""
+		button.accessibility_description = button.tooltip_text
 	if not operations_unlocked:
 		multiplication_check.button_pressed = false
 		division_check.button_pressed = false
 		selected_operations.erase("multiplication")
 		selected_operations.erase("division")
-	multiplication_lock.visible = not operations_unlocked
-	division_lock.visible = not operations_unlocked
-	multiplication_disabled_overlay.visible = not operations_unlocked
-	division_disabled_overlay.visible = not operations_unlocked
-	operation_tracks[2].visible = operations_unlocked
-	operation_tracks[3].visible = operations_unlocked
-	multiplication_lock.tooltip_text = "Entre pelo Project Gauss para confirmar a série." if school_year_load_failed else "Multiplicação liberada a partir do 3º ano."
-	division_lock.tooltip_text = "Entre pelo Project Gauss para confirmar a série." if school_year_load_failed else "Divisão liberada a partir do 3º ano."
-	_sync_operation_switch_art()
 	_refresh_start_button()
 	suppress_operation_speech = false
 
 
 func _open_difficulty_help() -> void:
+	# Keep keyboard navigation inside the modal, then restore the form.
+	for button in $HUD/Root/Center.find_children("*", "BaseButton"):
+		help_focus_modes[button] = button.focus_mode
+		button.focus_mode = Control.FOCUS_NONE
 	help_overlay.visible = true
+	help_close_button.grab_focus()
 	AudioManager.play_ui()
 
 
 func _close_difficulty_help() -> void:
 	help_overlay.visible = false
+	for button in help_focus_modes:
+		button.focus_mode = help_focus_modes[button]
+	help_focus_modes.clear()
+	help_button.grab_focus()
 	AudioManager.play_ui()
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if help_overlay.visible and event.is_action_pressed("ui_cancel"):
+		_close_difficulty_help()
+		get_viewport().set_input_as_handled()
 
 
 func _select_difficulty(difficulty: String) -> void:
@@ -215,7 +233,9 @@ func _select_difficulty(difficulty: String) -> void:
 		var button := child as Button
 		if button:
 			button.button_pressed = _difficulty_id(button.name) == difficulty
-			button.modulate = Color(1.0, 0.78, 0.33) if button.button_pressed else Color.WHITE
+			button.text = _difficulty_name(_difficulty_id(button.name)).to_upper()
+			button.icon = SELECTED_ICON if button.button_pressed else null
+			button.add_theme_constant_override("icon_max_width", 26)
 	AudioManager.play_ui()
 	AudioManager.speak_accessibility("Dificuldade %s selecionada." % _difficulty_name(difficulty))
 	_refresh_start_button()
@@ -238,7 +258,6 @@ func _operation_toggled(checked: bool, operation: String) -> void:
 		AudioManager.play_ui()
 		var state := "ativadas" if checked else "desativadas"
 		AudioManager.speak_accessibility("As contas de %s foram %s." % [_operation_name(operation), state])
-	_sync_operation_switch_art()
 	_refresh_start_button()
 
 
@@ -260,28 +279,9 @@ func _operation_button(operation: String) -> CheckButton:
 	return null
 
 
-func _sync_operation_switch_art() -> void:
-	var states := [
-		addition_check.button_pressed,
-		subtraction_check.button_pressed,
-		multiplication_check.button_pressed,
-		division_check.button_pressed,
-	]
-	for index in range(states.size()):
-		var enabled: bool = states[index]
-		if index >= 2 and active_school_year < MULTIPLICATION_UNLOCK_YEAR:
-			continue
-		var track := StyleBoxFlat.new()
-		track.bg_color = Color("#f32678") if enabled else Color("#595455")
-		track.set_corner_radius_all(15)
-		operation_tracks[index].add_theme_stylebox_override("panel", track)
-		operation_knobs[index].position.x = 21.0 if enabled else 3.0
-
-
 func _refresh_start_button() -> void:
 	var can_start := active_school_year > 0 and not selected_difficulty.is_empty() and not selected_operations.is_empty()
 	start_button.disabled = not can_start
-	start_disabled_overlay.visible = start_button.disabled
 	if active_school_year <= 0 and school_year_load_failed:
 		status_label.text = "Entre pelo Project Gauss para confirmar sua série."
 	elif active_school_year <= 0:
