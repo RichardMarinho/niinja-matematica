@@ -11,3 +11,9 @@ Fácil dura 75 segundos, usa contas menores e doces mais lentos, e tira pouco te
 ## API Project Gauss
 
 No executavel nativo, defina `GAUSS_API_URL` (por exemplo, `http://127.0.0.1:3001`) e `GAUSS_API_TOKEN` de aluno para carregar contas e enviar tentativas à API. Na versão Web dentro do site, o jogo usa a sessão já salva em `localStorage` (`gauss.student.session`) e a URL da API configurada pelo site; o token não vai na URL. Sem token, a partida funciona offline e usa geração local com os mesmos conjuntos e faixas de dificuldade definidos em `project-gauss-api/src/learning/free-practice.ts`, mas as tentativas não são sincronizadas. A API identifica o jogo como `ninja-matematica`. A dificuldade seleciona um conjunto por operação e avança conforme a pontuação. O recorde e a duração da partida continuam salvos localmente porque a API não oferece um endpoint de sessão para esses dados.
+
+## Acessibilidade e regressão
+
+Além do martelo visual, pressionar `Tab` mostra as mesmas alternativas como botões. O jogo oferece **Ouvir / F1** para ler a pergunta, alternativas, retorno e orientação, e **Parar / F3** para interromper a leitura. Pausar, encerrar a rodada ou sair também interrompe a fala.
+
+Da raiz do repositório, `bash scripts/run_accessibility_tests.sh` executa os percursos de teclado, leitura, feedback, pausa, foco, contraste e texto ampliado. A mesma bateria roda no GitHub Actions em pull requests e pushes para `main`.

@@ -1,11 +1,14 @@
 extends Node
 
 signal accessibility_profile_updated
+signal public_text_requested(content: String)
+signal public_text_stop_requested
 
 const SETTINGS_PATH := "user://ninja_matematica.cfg"
 const SAMPLE_RATE := 22050
 const MUSIC_BEAT_SECONDS := 0.75
 const MUSIC_BAR_COUNT := 8
+const NARRATION_REQUEST_PATH := "res://content/menu_narration_request.json"
 
 var music_player: AudioStreamPlayer
 var effect_players: Array[AudioStreamPlayer] = []
@@ -23,9 +26,13 @@ var accessibility_sfx_enabled := true
 var accessibility_profile := {"version": 1, "audioAssistance": false, "soundEffects": "on"}
 var accessibility_profile_received := false
 var accessibility_callback_ref: JavaScriptObject
+var _narration_keys: Dictionary = {}
+var _narration_sequence := 0
+var _narration_request_id := ""
 
 
 func _ready() -> void:
+	_load_narration_catalog()
 	get_tree().node_added.connect(_on_scene_node_added)
 	call_deferred("_connect_current_scene_buttons")
 	music_player = AudioStreamPlayer.new()
@@ -118,6 +125,7 @@ func _connect_button_hover(button: BaseButton) -> void:
 		return
 	button.set_meta("gauss_hover_sound_connected", true)
 	button.mouse_entered.connect(_on_button_hover.bind(button))
+	button.focus_entered.connect(_on_button_focus.bind(button))
 
 
 func _on_button_hover(button: BaseButton) -> void:
@@ -128,6 +136,53 @@ func _on_button_hover(button: BaseButton) -> void:
 		return
 	_last_hover_msec = now
 	_play(hover_stream)
+
+
+func _on_button_focus(button: BaseButton) -> void:
+	if not accessibility_profile.get("audioAssistance", false) or button.disabled:
+		return
+	var visible := button.accessibility_name.strip_edges()
+	if visible.is_empty():
+		visible = button.text.strip_edges()
+	read_public_text(visible)
+
+
+func _load_narration_catalog() -> void:
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(NARRATION_REQUEST_PATH))
+	if not parsed is Array:
+		push_error("Catálogo de narração do Documeros inválido.")
+		return
+	for entry: Variant in parsed:
+		if not entry is Dictionary or str(entry.get("context", "")).contains("[modelo dinâmico]"):
+			continue
+		var key := str(entry.get("key", ""))
+		var value := str(entry.get("text", "")).strip_edges()
+		if key.begins_with("game:ninja-matematica:") and not value.is_empty() and not _narration_keys.has(value):
+			_narration_keys[value] = key
+
+
+func read_public_text(content: String) -> void:
+	var value := content.strip_edges()
+	if value.is_empty():
+		return
+	public_text_requested.emit(value)
+	if not accessibility_profile.get("audioAssistance", false) or not OS.has_feature("web"):
+		return
+	_narration_sequence += 1
+	_narration_request_id = "ninja-%d-%d" % [Time.get_ticks_msec(), _narration_sequence]
+	var message: Dictionary = {"type": "gauss-game-narration-speak", "version": 1, "requestId": _narration_request_id, "text": value}
+	var key := str(_narration_keys.get(value, ""))
+	if not key.is_empty():
+		message["assetKey"] = key
+	JavaScriptBridge.eval("if(window.parent!==window)window.parent.postMessage(%s,window.location.origin)" % JSON.stringify(message))
+
+
+func stop_public_text() -> void:
+	public_text_stop_requested.emit()
+	if not OS.has_feature("web") or _narration_request_id.is_empty():
+		return
+	JavaScriptBridge.eval("if(window.parent!==window)window.parent.postMessage(%s,window.location.origin)" % JSON.stringify({"type": "gauss-game-narration-stop", "version": 1, "requestId": _narration_request_id}))
+	_narration_request_id = ""
 
 
 func set_music_enabled(enabled: bool) -> void:

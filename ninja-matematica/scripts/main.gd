@@ -50,6 +50,8 @@ const DIFFICULTIES := {
 @onready var record_label: Label = $HUD/Root/TopBar/RecordCard/Record
 @onready var feedback_flash: ColorRect = $HUD/Root/FeedbackFlash
 @onready var pause_button: Button = $HUD/Root/TopBar/PauseButton
+@onready var read_screen_button: Button = $HUD/Root/TopBar/ReadingActions/ReadScreenButton
+@onready var stop_reading_button: Button = $HUD/Root/TopBar/ReadingActions/StopReadingButton
 @onready var pause_overlay: Control = $HUD/Root/PauseOverlay
 @onready var pause_art: TextureRect = $HUD/Root/PauseOverlay/Center/PauseArt
 @onready var pause_menu: Control = $HUD/Root/PauseOverlay/Center/PauseCard/Content/PauseMenu
@@ -146,13 +148,14 @@ func _ready() -> void:
 	pause_overlay.cancelled.connect(_on_pause_cancel)
 	equation_card.focus_mode = Control.FOCUS_ALL
 	equation_card.accessibility_name = "Pergunta"
+	equation_card.focus_entered.connect(func(): AudioManager.read_public_text(equation_card.accessibility_name))
 	equation_normal_style = equation_card.get_theme_stylebox("panel")
 	var focus_style := StyleBoxFlat.new()
 	focus_style.bg_color = Color(0, 0, 0, 0)
 	focus_style.border_color = Color(0.2, 0.85, 1.0)
 	focus_style.set_border_width_all(5)
 	focus_style.set_corner_radius_all(18)
-	for button in [pause_button] + static_answer_buttons:
+	for button in [read_screen_button, stop_reading_button, pause_button] + static_answer_buttons:
 		button.focus_mode = Control.FOCUS_ALL
 		gameplay_focus_styles[button] = focus_style
 	equation_focus_style = equation_normal_style.duplicate()
@@ -164,6 +167,8 @@ func _ready() -> void:
 	equation_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for index in range(static_answer_buttons.size()):
 		static_answer_buttons[index].pressed.connect(_on_static_answer_pressed.bind(index))
+	read_screen_button.pressed.connect(_read_current_screen)
+	stop_reading_button.pressed.connect(_stop_reading)
 	pause_button.pressed.connect(_open_pause)
 	resume_button.pressed.connect(_resume_game)
 	pause_options_button.pressed.connect(_show_pause_options)
@@ -528,6 +533,8 @@ func _input(event: InputEvent) -> void:
 		if not active_question.is_empty() and game_running:
 			_spawn_static_answers()
 		controls.append(equation_card)
+		controls.append(read_screen_button)
+		controls.append(stop_reading_button)
 		for button in static_answer_buttons:
 			if button.is_visible_in_tree() and not button.disabled:
 				controls.append(button)
@@ -543,7 +550,36 @@ func _input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
+func _reading_text() -> String:
+	var parts: Array[String] = [equation_card.accessibility_name]
+	for index in range(static_answer_buttons.size()):
+		var answer_button := static_answer_buttons[index]
+		if answer_button.is_visible_in_tree():
+			parts.append("Alternativa %s: %s" % [char(65 + index), answer_button.text])
+	if answer_feedback_label.visible and not answer_feedback_label.text.strip_edges().is_empty():
+		parts.append("Retorno: " + answer_feedback_label.text)
+	if hint_label.visible and not hint_label.text.strip_edges().is_empty():
+		parts.append("Orientação: " + hint_label.text)
+	return ". ".join(parts)
+
+
+func _read_current_screen() -> void:
+	AudioManager.read_public_text(_reading_text())
+
+
+func _stop_reading() -> void:
+	AudioManager.stop_public_text()
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1:
+		_read_current_screen()
+		get_viewport().set_input_as_handled()
+		return
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
+		_stop_reading()
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		if event.keycode >= KEY_1 and event.keycode <= KEY_4:
 			_smash_answer_index(event.keycode - KEY_1)
@@ -1394,6 +1430,7 @@ func _update_timer() -> void:
 
 
 func _end_round() -> void:
+	_stop_reading()
 	game_running = false
 	remaining_time = 0.0
 	_update_timer()
@@ -1419,6 +1456,7 @@ func _end_round() -> void:
 func _open_pause() -> void:
 	if game_over_overlay.visible:
 		return
+	_stop_reading()
 	pause_menu.visible = true
 	pause_options.visible = false
 	pause_art.visible = true
@@ -1505,6 +1543,7 @@ func _exit_to_menu() -> void:
 		hint_label.visible = true
 		return
 	get_tree().paused = false
+	_stop_reading()
 	AudioManager.play_ui()
 	SceneFlow.change_scene("res://scenes/menu.tscn")
 

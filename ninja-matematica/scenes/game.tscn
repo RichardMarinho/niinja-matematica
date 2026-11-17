@@ -188,6 +188,32 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_pause")
 icon = ExtResource("ui_pause")
 icon_alignment = 1
 
+[node name="ReadingActions" type="HBoxContainer" parent="HUD/Root/TopBar"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 14.0
+offset_right = 312.0
+offset_bottom = 82.0
+theme_override_constants/separation = 8
+
+[node name="ReadScreenButton" type="Button" parent="HUD/Root/TopBar/ReadingActions"]
+custom_minimum_size = Vector2(114, 68)
+layout_mode = 2
+tooltip_text = "Lê a pergunta, as alternativas, o retorno e a orientação. Atalho F1."
+accessibility_name = "Ouvir pergunta, alternativas, retorno e orientação"
+accessibility_description = "Atalho F1."
+theme_override_font_sizes/font_size = 16
+text = "OUVIR\nF1"
+
+[node name="StopReadingButton" type="Button" parent="HUD/Root/TopBar/ReadingActions"]
+custom_minimum_size = Vector2(114, 68)
+layout_mode = 2
+tooltip_text = "Interrompe a leitura. Atalho F3."
+accessibility_name = "Parar leitura"
+accessibility_description = "Atalho F3."
+theme_override_font_sizes/font_size = 16
+text = "PARAR\nF3"
+
 [node name="TimerCard" type="Panel" parent="HUD/Root/TopBar" unique_id=782196841]
 layout_mode = 1
 anchors_preset = 1
